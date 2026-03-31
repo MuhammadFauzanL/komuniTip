@@ -29,34 +29,34 @@ Untuk mengetahui perancangan produk dan struktur API, silakan merujuk pada dokum
 <table align="center">
   <tr>
     <td align="center" width="150">
-      <img src="https://www.gravatar.com/avatar/irsyad?s=100&d=identicon" width="100" alt="PM" />
+      <img src="https://avatars.githubusercontent.com/u/[IrsyadmTqM]?s=100" width="100" alt="PM" />
       <br><b>Muhammad Irsyad Mustaqim</b>
       <br><em>Project Manager</em>
     </td>
     <td align="center" width="150">
-      <img src="https://www.gravatar.com/avatar/dev1?s=100&d=identicon" width="100" alt="UI/UX" />
+      <img src="https://avatars.githubusercontent.com/u/[github-id-2]?s=100" width="100" alt="UI/UX" />
       <br><b>[Nama Developer 1]</b>
       <br><em>UI/UX</em>
     </td>
     <td align="center" width="150">
-      <img src="https://www.gravatar.com/avatar/dev2?s=100&d=identicon" width="100" alt="Frontend" />
+      <img src="https://avatars.githubusercontent.com/u/[github-id-3]?s=100" width="100" alt="Frontend" />
       <br><b>[Nama Developer 2]</b>
       <br><em>Frontend</em>
     </td>
   </tr>
   <tr>
     <td align="center" width="150">
-      <img src="https://www.gravatar.com/avatar/dev3?s=100&d=identicon" width="100" alt="Backend" />
+      <img src="https://avatars.githubusercontent.com/u/[github-id-4]?s=100" width="100" alt="Backend" />
       <br><b>[Nama Developer 3]</b>
       <br><em>Backend</em>
     </td>
     <td align="center" width="150">
-      <img src="https://www.gravatar.com/avatar/dev4?s=100&d=identicon" width="100" alt="AI Engineer" />
+      <img src="https://avatars.githubusercontent.com/u/[github-id-5]?s=100" width="100" alt="AI Engineer" />
       <br><b>[Nama Developer 4]</b>
       <br><em>AI Engineer</em>
     </td>
     <td align="center" width="150">
-      <img src="https://www.gravatar.com/avatar/dev5?s=100&d=identicon" width="100" alt="DevOps, QA" />
+      <img src="https://avatars.githubusercontent.com/u/[github-id-6]?s=100" width="100" alt="DevOps, QA" />
       <br><b>[Nama Developer 5]</b>
       <br><em>DevOps, QA</em>
     </td>
