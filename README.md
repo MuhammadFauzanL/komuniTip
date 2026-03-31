@@ -26,21 +26,40 @@ Untuk mengetahui perancangan produk dan struktur API, silakan merujuk pada dokum
 
 ## 👨‍💻 Tim Developer
 
-**Muhammad Irsyad Mustaqim** — Project Manager  
-![GitHub](https://img.shields.io/badge/GitHub-IrsyadmTqM-181717?logo=github)
-
-**[Nama Developer 1]** — UI/UX  
-![GitHub](https://img.shields.io/badge/GitHub-[username]-181717?logo=github)
-
-**[Nama Developer 2]** — Frontend  
-![GitHub](https://img.shields.io/badge/GitHub-[username]-181717?logo=github)
-
-**[Nama Developer 3]** — Backend  
-![GitHub](https://img.shields.io/badge/GitHub-[username]-181717?logo=github)
-
-**[Nama Developer 4]** — AI Engineer  
-![GitHub](https://img.shields.io/badge/GitHub-[username]-181717?logo=github)
-
-**[Nama Developer 5]** — DevOps, QA  
-![GitHub](https://img.shields.io/badge/GitHub-[username]-181717?logo=github)
+<table>
+  <tr>
+    <td>
+      <h3>Muhammad Irsyad Mustaqim</h3>
+      <p><strong>Project Manager</strong></p>
+      <a href="https://github.com/IrsyadmTqM"><img src="https://img.shields.io/badge/GitHub-IrsyadmTqM-181717?logo=github&style=flat-square" alt="GitHub"/></a>
+    </td>
+    <td>
+      <h3>[Nama Developer 1]</h3>
+      <p><strong>UI/UX</strong></p>
+      <a href="https://github.com/[username]"><img src="https://img.shields.io/badge/GitHub-[username]-181717?logo=github&style=flat-square" alt="GitHub"/></a>
+    </td>
+    <td>
+      <h3>[Nama Developer 2]</h3>
+      <p><strong>Frontend</strong></p>
+      <a href="https://github.com/[username]"><img src="https://img.shields.io/badge/GitHub-[username]-181717?logo=github&style=flat-square" alt="GitHub"/></a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>[Nama Developer 3]</h3>
+      <p><strong>Backend</strong></p>
+      <a href="https://github.com/[username]"><img src="https://img.shields.io/badge/GitHub-[username]-181717?logo=github&style=flat-square" alt="GitHub"/></a>
+    </td>
+    <td>
+      <h3>[Nama Developer 4]</h3>
+      <p><strong>AI Engineer</strong></p>
+      <a href="https://github.com/[username]"><img src="https://img.shields.io/badge/GitHub-[username]-181717?logo=github&style=flat-square" alt="GitHub"/></a>
+    </td>
+    <td>
+      <h3>[Nama Developer 5]</h3>
+      <p><strong>DevOps, QA</strong></p>
+      <a href="https://github.com/[username]"><img src="https://img.shields.io/badge/GitHub-[username]-181717?logo=github&style=flat-square" alt="GitHub"/></a>
+    </td>
+  </tr>
+</table>
 
