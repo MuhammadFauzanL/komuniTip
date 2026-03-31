@@ -26,41 +26,40 @@ Untuk mengetahui perancangan produk dan struktur API, silakan merujuk pada dokum
 
 ## 👨‍💻 Tim Developer
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px;">
-  <div style="text-align: center;">
-    <img src="https://ui-avatars.com/api/?name=Irsyad+Mustaqim&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #FFD700; box-shadow: 0 0 15px #FFD700;" alt="Project Manager"/>
-    <p style="margin-top: 10px;"><b>Muhammad Irsyad Mustaqim</b></p>
-    <p style="margin: 0; color: #666;"><i>Project Manager</i></p>
-  </div>
-
-  <div style="text-align: center;">
-    <img src="https://ui-avatars.com/api/?name=Dev+1&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #00BFFF; box-shadow: 0 0 15px #00BFFF;" alt="UI/UX"/>
-    <p style="margin-top: 10px;"><b>[Nama Developer 1]</b></p>
-    <p style="margin: 0; color: #666;"><i>UI/UX</i></p>
-  </div>
-
-  <div style="text-align: center;">
-    <img src="https://ui-avatars.com/api/?name=Dev+2&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #FF1493; box-shadow: 0 0 15px #FF1493;" alt="Frontend"/>
-    <p style="margin-top: 10px;"><b>[Nama Developer 2]</b></p>
-    <p style="margin: 0; color: #666;"><i>Frontend</i></p>
-  </div>
-
-  <div style="text-align: center;">
-    <img src="https://ui-avatars.com/api/?name=Dev+3&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #32CD32; box-shadow: 0 0 15px #32CD32;" alt="Backend"/>
-    <p style="margin-top: 10px;"><b>[Nama Developer 3]</b></p>
-    <p style="margin: 0; color: #666;"><i>Backend</i></p>
-  </div>
-
-  <div style="text-align: center;">
-    <img src="https://ui-avatars.com/api/?name=Dev+4&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #9932CC; box-shadow: 0 0 15px #9932CC;" alt="AI Engineer"/>
-    <p style="margin-top: 10px;"><b>[Nama Developer 4]</b></p>
-    <p style="margin: 0; color: #666;"><i>AI Engineer</i></p>
-  </div>
-
-  <div style="text-align: center;">
-    <img src="https://ui-avatars.com/api/?name=Dev+5&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #FF8C00; box-shadow: 0 0 15px #FF8C00;" alt="DevOps, QA"/>
-    <p style="margin-top: 10px;"><b>[Nama Developer 5]</b></p>
-    <p style="margin: 0; color: #666;"><i>DevOps, QA</i></p>
-  </div>
-</div>
+<table align="center">
+  <tr>
+    <td align="center" width="150">
+      <img src="https://www.gravatar.com/avatar/irsyad?s=100&d=identicon" width="100" alt="PM" />
+      <br><b>Muhammad Irsyad Mustaqim</b>
+      <br><em>Project Manager</em>
+    </td>
+    <td align="center" width="150">
+      <img src="https://www.gravatar.com/avatar/dev1?s=100&d=identicon" width="100" alt="UI/UX" />
+      <br><b>[Nama Developer 1]</b>
+      <br><em>UI/UX</em>
+    </td>
+    <td align="center" width="150">
+      <img src="https://www.gravatar.com/avatar/dev2?s=100&d=identicon" width="100" alt="Frontend" />
+      <br><b>[Nama Developer 2]</b>
+      <br><em>Frontend</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="150">
+      <img src="https://www.gravatar.com/avatar/dev3?s=100&d=identicon" width="100" alt="Backend" />
+      <br><b>[Nama Developer 3]</b>
+      <br><em>Backend</em>
+    </td>
+    <td align="center" width="150">
+      <img src="https://www.gravatar.com/avatar/dev4?s=100&d=identicon" width="100" alt="AI Engineer" />
+      <br><b>[Nama Developer 4]</b>
+      <br><em>AI Engineer</em>
+    </td>
+    <td align="center" width="150">
+      <img src="https://www.gravatar.com/avatar/dev5?s=100&d=identicon" width="100" alt="DevOps, QA" />
+      <br><b>[Nama Developer 5]</b>
+      <br><em>DevOps, QA</em>
+    </td>
+  </tr>
+</table>
 
