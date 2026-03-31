@@ -26,55 +26,41 @@ Untuk mengetahui perancangan produk dan struktur API, silakan merujuk pada dokum
 
 ## 👨‍💻 Tim Developer
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; margin: 20px 0;">
-  
+<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px;">
   <div style="text-align: center;">
-    <a href="#">
-      <img src="https://ui-avatars.com/api/?name=Irsyad+Mustaqim&background=random&color=fff" width="120px" style="border-radius: 50%; border: 3px solid #FFD700; box-shadow: 0 0 20px #FFD700; display: block; margin: 0 auto;" alt="Project Manager"/>
-    </a>
-    <b style="display: block; margin-top: 10px; font-size: 16px;">Muhammad Irsyad Mustaqim</b>
-    <i style="display: block; color: #666; margin-top: 5px;">Project Manager</i>
+    <img src="https://ui-avatars.com/api/?name=Irsyad+Mustaqim&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #FFD700; box-shadow: 0 0 15px #FFD700;" alt="Project Manager"/>
+    <p style="margin-top: 10px;"><b>Muhammad Irsyad Mustaqim</b></p>
+    <p style="margin: 0; color: #666;"><i>Project Manager</i></p>
   </div>
 
   <div style="text-align: center;">
-    <a href="#">
-      <img src="https://ui-avatars.com/api/?name=Dev+1&background=random&color=fff" width="120px" style="border-radius: 50%; border: 3px solid #00BFFF; box-shadow: 0 0 20px #00BFFF; display: block; margin: 0 auto;" alt="UI/UX"/>
-    </a>
-    <b style="display: block; margin-top: 10px; font-size: 16px;">[Nama Developer 1]</b>
-    <i style="display: block; color: #666; margin-top: 5px;">UI/UX</i>
+    <img src="https://ui-avatars.com/api/?name=Dev+1&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #00BFFF; box-shadow: 0 0 15px #00BFFF;" alt="UI/UX"/>
+    <p style="margin-top: 10px;"><b>[Nama Developer 1]</b></p>
+    <p style="margin: 0; color: #666;"><i>UI/UX</i></p>
   </div>
 
   <div style="text-align: center;">
-    <a href="#">
-      <img src="https://ui-avatars.com/api/?name=Dev+2&background=random&color=fff" width="120px" style="border-radius: 50%; border: 3px solid #FF1493; box-shadow: 0 0 20px #FF1493; display: block; margin: 0 auto;" alt="Frontend"/>
-    </a>
-    <b style="display: block; margin-top: 10px; font-size: 16px;">[Nama Developer 2]</b>
-    <i style="display: block; color: #666; margin-top: 5px;">Frontend</i>
+    <img src="https://ui-avatars.com/api/?name=Dev+2&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #FF1493; box-shadow: 0 0 15px #FF1493;" alt="Frontend"/>
+    <p style="margin-top: 10px;"><b>[Nama Developer 2]</b></p>
+    <p style="margin: 0; color: #666;"><i>Frontend</i></p>
   </div>
 
   <div style="text-align: center;">
-    <a href="#">
-      <img src="https://ui-avatars.com/api/?name=Dev+3&background=random&color=fff" width="120px" style="border-radius: 50%; border: 3px solid #32CD32; box-shadow: 0 0 20px #32CD32; display: block; margin: 0 auto;" alt="Backend"/>
-    </a>
-    <b style="display: block; margin-top: 10px; font-size: 16px;">[Nama Developer 3]</b>
-    <i style="display: block; color: #666; margin-top: 5px;">Backend</i>
+    <img src="https://ui-avatars.com/api/?name=Dev+3&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #32CD32; box-shadow: 0 0 15px #32CD32;" alt="Backend"/>
+    <p style="margin-top: 10px;"><b>[Nama Developer 3]</b></p>
+    <p style="margin: 0; color: #666;"><i>Backend</i></p>
   </div>
 
   <div style="text-align: center;">
-    <a href="#">
-      <img src="https://ui-avatars.com/api/?name=Dev+4&background=random&color=fff" width="120px" style="border-radius: 50%; border: 3px solid #9932CC; box-shadow: 0 0 20px #9932CC; display: block; margin: 0 auto;" alt="AI Engineer"/>
-    </a>
-    <b style="display: block; margin-top: 10px; font-size: 16px;">[Nama Developer 4]</b>
-    <i style="display: block; color: #666; margin-top: 5px;">AI Engineer</i>
+    <img src="https://ui-avatars.com/api/?name=Dev+4&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #9932CC; box-shadow: 0 0 15px #9932CC;" alt="AI Engineer"/>
+    <p style="margin-top: 10px;"><b>[Nama Developer 4]</b></p>
+    <p style="margin: 0; color: #666;"><i>AI Engineer</i></p>
   </div>
 
   <div style="text-align: center;">
-    <a href="#">
-      <img src="https://ui-avatars.com/api/?name=Dev+5&background=random&color=fff" width="120px" style="border-radius: 50%; border: 3px solid #FF8C00; box-shadow: 0 0 20px #FF8C00; display: block; margin: 0 auto;" alt="DevOps, QA"/>
-    </a>
-    <b style="display: block; margin-top: 10px; font-size: 16px;">[Nama Developer 5]</b>
-    <i style="display: block; color: #666; margin-top: 5px;">DevOps, QA</i>
+    <img src="https://ui-avatars.com/api/?name=Dev+5&background=random&color=fff" width="100px" style="border-radius: 50%; border: 3px solid #FF8C00; box-shadow: 0 0 15px #FF8C00;" alt="DevOps, QA"/>
+    <p style="margin-top: 10px;"><b>[Nama Developer 5]</b></p>
+    <p style="margin: 0; color: #666;"><i>DevOps, QA</i></p>
   </div>
-
 </div>
 
