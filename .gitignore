@@ -1,0 +1,43 @@
+# ========================
+# MONOREPO ROOT .gitignore
+# ========================
+
+# Dependencies
+**/node_modules
+
+# Build output
+**/dist
+**/build
+
+# Environment variables (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.sublime-workspace
+
+# Test coverage
+**/coverage
+**/.nyc_output
+
+# Temp
+.temp
+.tmp
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock

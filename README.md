@@ -63,3 +63,66 @@ Untuk mengetahui perancangan produk dan struktur API, silakan merujuk pada dokum
   </tr>
 </table>
 
+
+# Komunitip
+
+Donation & streaming platform — monorepo containing backend API and frontend web app.
+
+## Architecture
+
+```
+komunitip/
+├── backend/       → NestJS API (TypeScript + Prisma + PostgreSQL)
+├── frontend/      → Vue.js Web App (coming soon)
+└── docker-compose.yml
+```
+
+## Quick Start
+
+### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
+- That's it! No Node.js required locally.
+
+### 1. Clone & Configure
+```bash
+git clone <repo-url>
+cd komunitip
+cp .env.example .env
+# Edit .env with your actual credentials
+```
+
+### 2. Start All Services
+```bash
+docker compose up --build -d
+```
+
+### 3. Access
+| Service | URL |
+|---|---|
+| Backend API | http://localhost:3000 |
+| Swagger Docs | http://localhost:3000/api/docs |
+| Adminer (DB GUI) | http://localhost:8080 |
+
+### Adding Dependencies
+```bash
+# Install new package (via Docker)
+docker exec -it komunitip-backend npm install --save <package-name>
+
+# Then rebuild to bake into image
+docker compose up --build -d
+```
+
+### Prisma Commands
+```bash
+# Run migrations
+docker exec -it komunitip-backend npx prisma migrate dev --name <migration_name>
+
+# Generate client
+docker exec -it komunitip-backend npx prisma generate
+
+# Open Prisma Studio
+docker exec -it komunitip-backend npx prisma studio
+```
+
+### Dev Container (Recommended)
+Open this project in VS Code/Cursor → Command Palette → **"Reopen in Container"** for full IntelliSense inside Docker.

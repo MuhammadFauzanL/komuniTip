@@ -1,0 +1,83 @@
+# ============================================
+# KOMUNITIP - Docker Compose (Development)
+# ============================================
+# Usage:
+#   docker compose up --build -d    → Start all services
+#   docker compose down             → Stop all services
+#   docker compose logs -f          → View logs
+# ============================================
+
+name: komunitip  
+
+services:
+  # ─────────────────────────────────────────
+  # 1. DATABASE
+  # ─────────────────────────────────────────
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: komunitip-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT_EXTERNAL:-5433}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - komunitip-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # 2. BACKEND API (NestJS)
+  # ─────────────────────────────────────────
+  backend-api:
+    build:
+      context: ./backend
+      target: development
+    container_name: komunitip-backend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres-db:5432/${DB_NAME}?schema=public
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - komunitip-network
+
+  # ─────────────────────────────────────────
+  # 3. ADMINER (Database GUI)
+  # ─────────────────────────────────────────
+  adminer:
+    image: adminer:latest
+    container_name: komunitip-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - komunitip-network
+
+volumes:
+  postgres-data:
+    name: backend_postgres-data  
+
+networks:
+  komunitip-network:
+    driver: bridge

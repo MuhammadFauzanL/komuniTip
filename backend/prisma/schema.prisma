@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  nama_lengkap        String
+  username_slug       String    @unique @db.VarChar(50)
+  password_hash       String?   // Null jika login murni via Google
+  provider            String    @default("google") // 'local' atau 'google'
+  google_id           String?   @unique
+  saldo_aktif         Decimal   @default(0.00) @db.Decimal(15, 2)
+  
+  // Field Tambahan untuk Fitur Lupa Password (UI Step 3)
+  reset_token         String?   @unique @db.VarChar(255)
+  reset_token_expires DateTime?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  donations           Donation[]
+  overlay             OverlaySetting?
+
+  @@map("users")
+}
+
+model Donation {
+  id                  String   @id @default(uuid())
+  streamerId          String
+  nama_donatur        String   @default("Anonim") @db.VarChar(100)
+  pesan               String?  @db.Text
+  jumlah              Decimal  @db.Decimal(15, 2)
+  status              String   @default("PENDING") @db.VarChar(20)
+  payment_gateway_ref String?  @unique
+  createdAt           DateTime @default(now())
+
+  streamer            User     @relation(fields: [streamerId], references: [id], onDelete: Cascade)
+
+  @@index([streamerId])
+  @@map("donations")
+}
+
+model OverlaySetting {
+  id                  String   @id @default(uuid())
+  streamerId          String   @unique
+  min_donasi_alert    Decimal  @default(10000.00) @db.Decimal(15, 2)
+  
+  streamer            User     @relation(fields: [streamerId], references: [id], onDelete: Cascade)
+
+  @@map("overlay_settings")
+}
