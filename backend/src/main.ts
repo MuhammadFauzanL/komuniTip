@@ -1,9 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // ─── Global API Response Formatter ───
+  app.useGlobalInterceptors(new TransformInterceptor());
+
+  // ─── Global Validation Pipe ───
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Hapus payload yang tidak terdaftar di DTO
+      transform: true, // Otomatis transform payload ke instance DTO
+      forbidNonWhitelisted: true, // Tolak payload dengan body nyasar
+    }),
+  );
 
   // ─── Swagger API Documentation ───
   const config = new DocumentBuilder()
