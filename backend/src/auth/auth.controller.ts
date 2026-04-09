@@ -1,9 +1,12 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { GoogleAuthDto } from './dto/google-auth.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { CompleteUsernameDto } from './dto/complete-username.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -35,4 +38,30 @@ export class AuthController {
   async googleAuth(@Body() googleAuthDto: GoogleAuthDto) {
     return this.authService.verifyGoogleTokenAndLogin(googleAuthDto.id_token);
   }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Kirim request reset password via email' })
+  @ApiResponse({ status: 200, description: 'Link reset berhasil dikirim' })
+  @ApiResponse({ status: 400, description: 'Email tidak terdaftar' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('onboarding')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Menyelesaikan Onboarding (Memasukkan Username) bagi pengguna pendaftar Google baru' })
+  @ApiResponse({ status: 200, description: 'Username berhasil tersimpan, menerima JWT baru' })
+  @ApiResponse({ status: 400, description: 'Username sudah digunakan' })
+  @ApiResponse({ status: 401, description: 'Sesi tidak valid / belum login' })
+  async completeOnboarding(
+    @Request() req,
+    @Body() dto: CompleteUsernameDto
+  ) {
+    // req.user terisi secara otomatis oleh JwtAuthGuard melalui jwt.strategy.ts
+    // JwtStrategy mengembalikan object user dari database dengan field .id
+    return this.authService.completeOnboarding(req.user.id, dto.username);
+  }
 }
+

@@ -60,7 +60,28 @@ services:
       - komunitip-network
 
   # ─────────────────────────────────────────
-  # 3. ADMINER (Database GUI)
+  # 3. FRONTEND (Vue 3 + Vite)
+  # ─────────────────────────────────────────
+  frontend-app:
+    build:
+      context: ./Frontend
+      target: development
+    container_name: komunitip-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend-api
+    volumes:
+      - ./Frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - VITE_API_URL=http://backend-api:3000
+    networks:
+      - komunitip-network
+
+  # ─────────────────────────────────────────
+  # 4. ADMINER (Database GUI)
   # ─────────────────────────────────────────
   adminer:
     image: adminer:latest

@@ -3,9 +3,22 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // ─── CORS Configuration ───
+  app.enableCors({
+    origin: ['http://localhost:5173'], // Frontend dev server
+    credentials: true,
+  });
+
+  // ─── Security Configuration ─── 
+  app.use(helmet({
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    crossOriginEmbedderPolicy: false,
+  }));
 
   // ─── Global API Response Formatter ───
   app.useGlobalInterceptors(new TransformInterceptor());

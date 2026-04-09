@@ -12,6 +12,11 @@ export class RegisterDto {
   @IsNotEmpty()
   nama_lengkap: string;
 
+  @ApiProperty({ example: 'budi_santoso', description: 'Maks. 30 karakter tanpa spasi' })
+  @IsString()
+  @IsNotEmpty()
+  username: string;
+
   @ApiProperty({ example: 'SandiRahasia123', description: 'Minimal 6 karakter' })
   @IsString()
   @IsNotEmpty()
