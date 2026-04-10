@@ -16,7 +16,8 @@ const emit = defineEmits(['goToRegister', 'goToForgotPassword', 'loginSuccess'])
 
 const identifier = ref('')
 const password = ref('')
-const rememberMe = ref(false) // Note: actual remember me logic typically extends token lifetime but we ignore for simple UX
+const showPassword = ref(false)
+const rememberMe = ref(false)
 const loading = ref(false)
 const errorMsg = ref('')
 
@@ -244,14 +245,30 @@ const handleGoogleError = (error) => {
             <!-- Password -->
             <div class="space-y-1.5 text-left">
               <label class="text-[13px] font-semibold text-white block">Password</label>
-              <input
-                type="password"
-                v-model="password"
-                placeholder="••••••••"
-                class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all"
-                style="background-color: #161b28; border: 1px solid #252f42;"
-                required
-              />
+              <div class="relative">
+                <input
+                  :type="showPassword ? 'text' : 'password'"
+                  v-model="password"
+                  placeholder="••••••••"
+                  class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all pr-12"
+                  style="background-color: #161b28; border: 1px solid #252f42;"
+                  required
+                />
+                <button 
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a6478] hover:text-[#4a9dff] transition-colors focus:outline-none"
+                >
+                  <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 1.274-4.057 5.064-7 9.542-7 1.225 0 2.39.215 3.475.608M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <!-- Remember me / Forgot password -->

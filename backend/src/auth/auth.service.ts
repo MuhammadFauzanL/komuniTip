@@ -7,6 +7,8 @@ import { randomUUID } from 'crypto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
+import { MailService } from '../mail/mail.service';
+
 @Injectable()
 export class AuthService {
   private googleClient: OAuth2Client;
@@ -14,6 +16,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {
     this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   }
@@ -206,12 +209,43 @@ export class AuthService {
       },
     });
 
-    // 5. Di production: kirim email dengan link reset
-    // Untuk sekarang: return token untuk development/testing
+    // 5. Kirim email dengan link reset
+    await this.mailService.sendPasswordResetEmail(user.email, user.nama_lengkap, resetToken);
+
     return {
       message: 'Link reset password telah dikirim ke email kamu',
-      // TODO: Hapus reset_token dari response setelah email service aktif
-      ...(process.env.NODE_ENV !== 'production' && { reset_token: resetToken }),
     };
+  }
+
+  // ─── RESET PASSWORD ───
+
+  async resetPassword(token: string, new_password: string) {
+    // 1. Cari user dengan token tersebut
+    const user = await this.prisma.user.findFirst({
+      where: {
+        reset_token: token,
+        reset_token_expires: { gt: new Date() }, // Belum kadaluarsa
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Token reset tidak valid atau sudah kadaluarsa');
+    }
+
+    // 2. Hash password baru
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(new_password, saltRounds);
+
+    // 3. Update password dan hapus token
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password_hash: hashedPassword,
+        reset_token: null,
+        reset_token_expires: null,
+      },
+    });
+
+    return { message: 'Password berhasil diperbarui. Silakan login kembali.' };
   }
 }

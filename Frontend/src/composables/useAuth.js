@@ -92,6 +92,15 @@ export function useAuth() {
     clearAuth()
   }
 
+  /**
+   * Reset password using token from email
+   * @param {{ token: string, new_password: string }} payload
+   */
+  async function resetPassword(payload) {
+    const { data } = await api.post('/auth/reset-password', payload)
+    return data
+  }
+
   return {
     user,
     token,
@@ -101,6 +110,7 @@ export function useAuth() {
     googleAuth,
     forgotPassword,
     completeOnboarding,
+    resetPassword,
     logout,
   }
 }

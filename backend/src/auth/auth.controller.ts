@@ -7,6 +7,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { CompleteUsernameDto } from './dto/complete-username.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -62,6 +63,15 @@ export class AuthController {
     // req.user terisi secara otomatis oleh JwtAuthGuard melalui jwt.strategy.ts
     // JwtStrategy mengembalikan object user dari database dengan field .id
     return this.authService.completeOnboarding(req.user.id, dto.username);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Mengatur ulang password menggunakan token dari email' })
+  @ApiResponse({ status: 200, description: 'Password berhasil diperbarui' })
+  @ApiResponse({ status: 400, description: 'Token tidak valid atau kadaluarsa' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.new_password);
   }
 }
 

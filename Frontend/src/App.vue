@@ -9,12 +9,24 @@ import ProfileView from './components/ProfileView.vue'
 import OverlayView from './components/OverlayView.vue'
 
 import OnboardingUsernameStep from './components/OnboardingUsernameStep.vue'
+import ResetPasswordView from './components/ResetPasswordView.vue'
 
 const currentView = ref('login')
+const resetToken = ref(null)
 const { isAuthenticated, user } = useAuth()
 
 // Automatically redirect based on auth state
 watchEffect(() => {
+  // Check for reset token in URL once on load
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('token');
+  if (tokenFromUrl && currentView.value !== 'reset-password') {
+    resetToken.value = tokenFromUrl;
+    currentView.value = 'reset-password';
+    // Clear URL params without reloading
+    window.history.replaceState({}, document.title, "/");
+  }
+
   if (isAuthenticated.value) {
     // If logged in but doesn't have a username yet, force onboarding
     if (!user.value?.username) {
@@ -68,6 +80,7 @@ const handleLoginSuccess = () => {
   <ProfileView v-else-if="currentView === 'profile'" @goToDashboard="goToDashboard" @goToLogin="goToLogin" @goToOverlay="goToOverlay" />
   <DashboardView v-else-if="currentView === 'dashboard'" @goToLogin="goToLogin" @goToProfile="goToProfile" @goToOverlay="goToOverlay" />
   <OnboardingUsernameStep v-else-if="currentView === 'onboarding'" @onboardingComplete="handleLoginSuccess" />
+  <ResetPasswordView v-else-if="currentView === 'reset-password'" :token="resetToken" @goToLogin="goToLogin" />
   <RegisterView v-else-if="currentView === 'register'" @goToLogin="goToLogin" @registerSuccess="handleLoginSuccess" />
   <ForgotPasswordView v-else-if="currentView === 'forgot-password'" @goToLogin="goToLogin" />
   <LoginView v-else @goToRegister="goToRegister" @goToForgotPassword="goToForgotPassword" @loginSuccess="handleLoginSuccess" />
