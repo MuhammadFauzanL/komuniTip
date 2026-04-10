@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import StandingMascot from '../assets/Image_(Cowboy Mascot).png'
 import SittingMascot from '../assets/Image_(Sitting Cowboy Mascot).png'
@@ -12,21 +13,20 @@ import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 
-const emit = defineEmits(['goToDashboard', 'goToLogin', 'goToOverlay'])
-
-const { logout } = useAuth()
+const router = useRouter()
+const { user, logout } = useAuth()
 
 const handleLogout = () => {
   logout()
-  emit('goToLogin')
+  router.push('/login')
 }
 
 const handleGoToDashboard = () => {
-  emit('goToDashboard')
+  router.push('/dashboard')
 }
 
 const handleGoToOverlay = () => {
-  emit('goToOverlay')
+  router.push('/overlay')
 }
 
 // Form state

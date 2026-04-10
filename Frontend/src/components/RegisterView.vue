@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { GoogleLogin } from 'vue3-google-login'
 import StandingMascot from '../assets/Image_(Cowboy Mascot).png'
@@ -12,8 +13,9 @@ import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 
-const emit = defineEmits(['goToLogin', 'registerSuccess'])
+const emit = defineEmits([]) // No more emits needed for navigation
 
+const router = useRouter()
 const fullName = ref('')
 const username = ref('')
 const email = ref('')
@@ -50,10 +52,9 @@ const handleRegister = async () => {
       email: email.value, 
       password: password.value 
     })
-    successMsg.value = 'Akun berhasil dibuat! Mengalihkan ke login...'
-    setTimeout(() => {
-      emit('goToLogin')
-    }, 2000)
+    
+    // Auto-onboarding check handled by global guard
+    router.push('/dashboard')
   } catch (err) {
     errorMsg.value = err.message || 'Gagal mendaftar, silakan coba lagi'
   } finally {
@@ -61,18 +62,19 @@ const handleRegister = async () => {
   }
 }
 
-const handleGoogleCallback = async (response) => {
-  if (response.credential) {
-    errorMsg.value = ''
-    loading.value = true
-    try {
-      await googleAuth(response.credential)
-      emit('registerSuccess') // acts as login
-    } catch (err) {
-      errorMsg.value = err.message || 'Google Register gagal'
-    } finally {
-      loading.value = false
+const handleGoogleSuccess = async (response) => {
+  loading.value = true
+  try {
+    const res = await googleAuth(response.credential)
+    if (res.require_onboarding) {
+      router.push('/onboarding')
+    } else {
+      router.push('/dashboard')
     }
+  } catch (err) {
+    errorMsg.value = err.message || 'Google Register gagal'
+  } finally {
+    loading.value = false
   }
 }
 </script>
@@ -187,9 +189,9 @@ const handleGoogleCallback = async (response) => {
         <!-- Login Link Top Right -->
         <div class="w-full flex justify-end items-center gap-3 text-[14px] font-medium text-[#7a8ba8] mb-8">
           Punya akun? 
-          <button @click="emit('goToLogin')" class="bg-[#3b82f6] hover:brightness-110 text-white px-6 py-2.5 rounded-[12px] font-[700] transition-all" style="box-shadow: 0 4px 16px rgba(59,130,246,0.38), inset 0 -2px 0 rgba(0,0,0,0.14);">
+          <router-link to="/login" class="bg-[#3b82f6] hover:brightness-110 text-white px-6 py-2.5 rounded-[12px] font-[700] transition-all" style="box-shadow: 0 4px 16px rgba(59,130,246,0.38), inset 0 -2px 0 rgba(0,0,0,0.14);">
             Masuk
-          </button>
+          </router-link>
         </div>
 
         <!-- Form card -->
@@ -205,7 +207,7 @@ const handleGoogleCallback = async (response) => {
           <!-- Google button -->
           <div class="w-full relative flex justify-center" style="height: 48px;">
             <GoogleLogin 
-              :callback="handleGoogleCallback" 
+              :callback="handleGoogleSuccess" 
               :button-config="{
                 theme: 'filled_black',
                 size: 'large',

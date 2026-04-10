@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 
 const emit = defineEmits(['onboardingComplete'])
@@ -8,6 +9,7 @@ const username = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
 
+const router = useRouter()
 const { completeOnboarding } = useAuth()
 
 const handleSubmit = async () => {
@@ -26,7 +28,7 @@ const handleSubmit = async () => {
   loading.value = true
   try {
     await completeOnboarding(username.value)
-    emit('onboardingComplete')
+    router.push('/dashboard')
   } catch (err) {
     errorMsg.value = err.response?.data?.message || err.message || 'Gagal menyimpan username'
   } finally {

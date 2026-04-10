@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { GoogleLogin } from 'vue3-google-login'
 import SittingMascot from '../assets/Image_(Sitting Cowboy Mascot).png'
@@ -14,6 +15,7 @@ import IconBurung from '../assets/Icon_burung.png'
 
 const emit = defineEmits(['goToRegister', 'goToForgotPassword', 'loginSuccess'])
 
+const router = useRouter()
 const identifier = ref('')
 const password = ref('')
 const showPassword = ref(false)
@@ -27,8 +29,16 @@ const handleLogin = async () => {
   errorMsg.value = ''
   loading.value = true
   try {
-    await login({ identifier: identifier.value, password: password.value })
-    emit('loginSuccess')
+    const res = await login({
+      identifier: identifier.value,
+      password: password.value
+    })
+    
+    if (res.require_onboarding) {
+      router.push('/onboarding')
+    } else {
+      router.push('/dashboard')
+    }
   } catch (err) {
     errorMsg.value = err.message || 'Gagal login, silakan coba lagi'
   } finally {
@@ -36,18 +46,20 @@ const handleLogin = async () => {
   }
 }
 
-const handleGoogleCallback = async (response) => {
-  if (response.credential) {
-    errorMsg.value = ''
-    loading.value = true
-    try {
-      await googleAuth(response.credential)
-      emit('loginSuccess')
-    } catch (err) {
-      errorMsg.value = err.message || 'Google Login gagal'
-    } finally {
-      loading.value = false
+const handleGoogleSuccess = async (response) => {
+  loading.value = true
+  try {
+    const res = await googleAuth(response.credential)
+    
+    if (res.require_onboarding) {
+      router.push('/onboarding')
+    } else {
+      router.push('/dashboard')
     }
+  } catch (err) {
+    errorMsg.value = err.message || 'Google Login gagal'
+  } finally {
+    loading.value = false
   }
 }
 
@@ -205,7 +217,7 @@ const handleGoogleError = (error) => {
           <!-- Google button -->
           <div class="w-full relative flex justify-center" style="height: 48px;">
             <GoogleLogin 
-              :callback="handleGoogleCallback" 
+              :callback="handleGoogleSuccess" 
               :error-callback="handleGoogleError"
               :button-config="{
                 theme: 'filled_black',
@@ -272,20 +284,12 @@ const handleGoogleError = (error) => {
             </div>
 
             <!-- Remember me / Forgot password -->
-            <div class="flex items-center justify-between pt-1">
-              <label class="flex items-center gap-2.5 cursor-pointer">
-                <div class="relative w-4 h-4">
-                  <input type="checkbox" v-model="rememberMe" class="peer sr-only" />
-                  <div class="w-4 h-4 rounded-[4px] border-[1.5px] transition-all peer-checked:bg-[#2563eb] peer-checked:border-[#2563eb] flex items-center justify-center"
-                       style="border-color: #404a5f; background-color: transparent;">
-                    <svg v-if="rememberMe" class="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
-                  </div>
-                </div>
-                <span class="text-[13px] font-medium text-white">Ingat saya</span>
-              </label>
-              <a href="#" @click.prevent="emit('goToForgotPassword')" class="text-[13px] font-semibold hover:opacity-80 transition-opacity cursor-pointer" style="color: #4a9dff;">Lupa password?</a>
+            <div class="flex items-center justify-between text-[13px]">
+              <div class="flex items-center">
+                <input type="checkbox" v-model="rememberMe" id="remember" class="w-4 h-4 rounded border-[#252f42] bg-[#161b28] text-blue-600 focus:ring-blue-500" />
+                <label for="remember" class="ml-2 text-[#7a8ba8] cursor-pointer">Ingat saya</label>
+              </div>
+              <router-link to="/forgot-password" class="text-[#4a9dff] font-semibold hover:underline">Lupa password?</router-link>
             </div>
 
             <!-- Submit -->
@@ -299,9 +303,9 @@ const handleGoogleError = (error) => {
             </div>
 
             <!-- Register link -->
-            <div class="text-center text-[13px] pb-1" style="color: #5a6478;">
-              Belum punya akun?
-              <a href="#" @click.prevent="emit('goToRegister')" class="font-bold ml-1 hover:opacity-80 transition-opacity cursor-pointer" style="color: #4a9dff;">Daftar sekarang</a>
+            <div class="text-center text-[14px] pt-4" style="color: #5a6478;">
+              Belum punya akun? 
+              <router-link to="/register" class="font-bold ml-1 hover:opacity-80 transition-opacity" style="color: #4a9dff;">Daftar gratis</router-link>
             </div>
 
           </form>

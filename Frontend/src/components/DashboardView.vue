@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import StandingMascot from '../assets/Image_(Cowboy Mascot).png'
 import WizardMascot from '../assets/Image_(Wizard Mascot).png'
@@ -12,13 +13,14 @@ import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 
-const emit = defineEmits(['goToLogin', 'goToProfile', 'goToOverlay'])
+const emit = defineEmits([]) // Navigation handled by router
 
+const router = useRouter()
 const { logout } = useAuth()
 
 const handleLogout = () => {
   logout()
-  emit('goToLogin')
+  router.push('/login')
 }
 
 const copyLink = () => {
@@ -27,11 +29,15 @@ const copyLink = () => {
 }
 
 const handleGoToProfile = () => {
-  emit('goToProfile')
+  router.push('/profile')
+}
+
+const handleGoToDashboard = () => {
+  router.push('/dashboard')
 }
 
 const handleGoToOverlay = () => {
-  emit('goToOverlay')
+  router.push('/overlay')
 }
 </script>
 

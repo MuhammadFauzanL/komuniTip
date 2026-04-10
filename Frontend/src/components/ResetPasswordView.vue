@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import WizardMascot from '../assets/Image_(Wizard Mascot).png'
 import StandingMascot from '../assets/Image_(Cowboy Mascot).png'
@@ -11,7 +12,9 @@ import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 
-const props = defineProps(['token'])
+const router = useRouter()
+const route = useRoute()
+const token = ref(route.query.token || '')
 const emit = defineEmits(['goToLogin', 'resetSuccess'])
 
 const password = ref('')
@@ -40,13 +43,13 @@ const handleReset = async () => {
 
   loading.value = true
   try {
-    const res = await resetPassword({
-      token: props.token,
+    await resetPassword({
+      token: token.value,
       new_password: password.value
     })
-    successMsg.value = res.message || 'Password berhasil diperbarui!'
+    successMsg.value = 'Password berhasil diperbarui! Mengalihkan ke halaman login...'
     setTimeout(() => {
-      emit('goToLogin')
+      router.push('/login')
     }, 2500)
   } catch (err) {
     errorMsg.value = err.response?.data?.message || err.message || 'Gagal reset password'
@@ -109,7 +112,14 @@ const handleReset = async () => {
           <div class="absolute top-0 left-0 w-full h-[1px]"
                style="background: linear-gradient(90deg, transparent, rgba(59,130,246,0.18), transparent);"></div>
 
-          <h1 class="text-white text-[28px] font-bold text-center mb-10">Reset Password</h1>
+          <div class="flex items-center gap-4 mb-4">
+            <router-link to="/login" class="p-2.5 rounded-xl border border-[#242d42] bg-[#111624] text-white hover:bg-[#161b28] transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </router-link>
+            <h2 class="text-[26px] font-bold text-white">Reset Password</h2>
+          </div>
 
           <form @submit.prevent="handleReset" class="space-y-6">
             <div v-if="errorMsg" class="p-3 text-sm text-red-400 bg-red-900/30 border border-red-800 rounded-lg text-center">{{ errorMsg }}</div>
@@ -185,7 +195,7 @@ const handleReset = async () => {
 
             <div class="text-center text-[14px] pt-2" style="color: #5a6478;">
               Ingat passwordmu? 
-              <a href="#" @click.prevent="emit('goToLogin')" class="font-bold ml-1 hover:opacity-80 transition-opacity cursor-pointer" style="color: #4a9dff;">Masuk sekarang</a>
+              <router-link to="/login" class="font-bold ml-1 hover:opacity-80 transition-opacity cursor-pointer" style="color: #4a9dff;">Masuk sekarang</router-link>
             </div>
           </form>
         </div>

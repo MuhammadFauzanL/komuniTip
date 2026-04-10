@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import StandingMascot from '../assets/Image_(Cowboy Mascot).png'
 import WizardMascot from '../assets/Image_(Wizard Mascot).png'
@@ -13,6 +14,7 @@ import IconBurung from '../assets/Icon_burung.png'
 
 const emit = defineEmits(['goToLogin'])
 
+const router = useRouter()
 const email = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
@@ -135,8 +137,8 @@ const handleReset = async () => {
 
           <!-- Go back to login -->
           <div class="text-center text-[13px] pt-4 pb-1" style="color: #7a8ba8;">
-            Ingat passwordmu?
-            <a href="#" @click.prevent="emit('goToLogin')" class="font-bold ml-1 hover:opacity-80 transition-opacity cursor-pointer" style="color: #4a9dff;">Masuk sekarang</a>
+            Kembali ke 
+            <router-link to="/login" class="font-bold ml-1 hover:opacity-80 transition-opacity" style="color: #4a9dff;">Halaman Login</router-link>
           </div>
 
         </form>

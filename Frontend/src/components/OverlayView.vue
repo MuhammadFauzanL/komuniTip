@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import StandingMascot from '../assets/Image_(Cowboy Mascot).png'
 import ProfileImage from '../assets/Image_(Profile).png'
@@ -11,7 +12,7 @@ import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 
-const emit = defineEmits(['goToDashboard', 'goToProfile', 'goToLogin'])
+const router = useRouter()
 
 const currentTab = ref('Default')
 const browserSourceUrl = ref('https://overlay.komunitip.id/alert/h7szxreuy7d6ff56u6-8h76ff4vzd9zklbb11')
@@ -32,16 +33,12 @@ const { logout } = useAuth()
 
 const handleLogout = () => {
   logout()
-  emit('goToLogin')
+  router.push('/login')
 }
 
-const handleGoToDashboard = () => {
-  emit('goToDashboard')
-}
+const handleGoToDashboard = () => router.push('/dashboard')
 
-const handleGoToProfile = () => {
-  emit('goToProfile')
-}
+const handleGoToProfile = () => router.push('/profile')
 
 const copyUrl = () => {
   navigator.clipboard.writeText(browserSourceUrl.value)
