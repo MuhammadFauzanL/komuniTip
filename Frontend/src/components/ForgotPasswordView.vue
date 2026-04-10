@@ -113,14 +113,14 @@ const handleReset = async () => {
           <!-- Email -->
           <div class="space-y-1.5 text-left">
             <label class="text-[13px] font-semibold text-white block">Alamat Email</label>
-            <input
-              type="email"
-              v-model="email"
-              placeholder="nama@email.com"
-              class="w-full rounded-[12px] px-4 py-3.5 text-white text-[14px] outline-none transition-all placeholder-[#5a6478]"
-              style="background-color: #161b28; border: 1px solid #252f42;"
-              required
-            />
+              <input
+                type="email"
+                v-model="email"
+                placeholder="nama@emailanda.com"
+                class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all"
+                style="background-color: #161b28; border: 1px solid #252f42;"
+                required
+              />
           </div>
 
           <!-- Submit -->

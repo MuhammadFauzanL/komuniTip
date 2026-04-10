@@ -151,7 +151,7 @@ const handleReset = async () => {
                 <input
                   :type="showConfirmPassword ? 'text' : 'password'"
                   v-model="confirmPassword"
-                  placeholder="Masukan Konfirmasi Password Baru"
+                  placeholder="Ulangi password baru"
                   class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all placeholder-[#404a5f] pr-12"
                   style="background-color: #161b28; border: 1px solid #252f42;"
                   required

@@ -236,7 +236,7 @@ const handleGoogleCallback = async (response) => {
               <input
                 type="text"
                 v-model="fullName"
-                placeholder="Contoh: Ihsan"
+                placeholder="Contoh: Si Nitip"
                 class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all placeholder-[#5a6478]"
                 style="background-color: #161b28; border: 1px solid #252f42;"
                 required
@@ -249,7 +249,7 @@ const handleGoogleCallback = async (response) => {
               <input
                 type="text"
                 v-model="username"
-                placeholder="ihsan_gaming"
+                placeholder="Contoh: nitipkekita"
                 class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all placeholder-[#5a6478]"
                 style="background-color: #161b28; border: 1px solid #252f42;"
                 required

@@ -369,7 +369,7 @@ const handleGoToOverlay = () => {
                 <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-[15px]" style="background-color: #0ea5e9;">NZ</div>
                 <div>
                   <div class="flex items-center space-x-2">
-                    <span class="font-bold text-[15px] text-white">ihsan</span>
+                    <span class="font-bold text-[15px] text-white">Si Nitip</span>
                     <span class="text-[#516382] text-[12px]">san@gmail.com</span>
                     <span class="px-2 py-0.5 rounded text-[11px] font-bold text-emerald-400 bg-emerald-500/10">+Rp 30k</span>
                   </div>

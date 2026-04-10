@@ -235,7 +235,7 @@ const handleGoogleError = (error) => {
               <input
                 type="text"
                 v-model="identifier"
-                placeholder="nama@email.com atau ihsan_gaming"
+                placeholder="email@contoh.com atau username"
                 class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all"
                 style="background-color: #161b28; border: 1px solid #252f42;"
                 required
@@ -249,7 +249,7 @@ const handleGoogleError = (error) => {
                 <input
                   :type="showPassword ? 'text' : 'password'"
                   v-model="password"
-                  placeholder="••••••••"
+                  placeholder="Ketik password kamu"
                   class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all pr-12"
                   style="background-color: #161b28; border: 1px solid #252f42;"
                   required
