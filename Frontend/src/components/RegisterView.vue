@@ -252,6 +252,7 @@ const handleGoogleCallback = async (response) => {
                 placeholder="Contoh: nitipkekita"
                 class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all placeholder-[#5a6478]"
                 style="background-color: #161b28; border: 1px solid #252f42;"
+                @input="username = username.toLowerCase().replace(/[^a-z0-9_]/g, '')"
                 required
               />
             </div>

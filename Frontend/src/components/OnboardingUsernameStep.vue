@@ -13,8 +13,8 @@ const { completeOnboarding } = useAuth()
 const handleSubmit = async () => {
   errorMsg.value = ''
   
-  if (/\s/.test(username.value)) {
-    errorMsg.value = 'Username tidak boleh mengandung spasi'
+  if (/[^a-z0-9_]/.test(username.value)) {
+    errorMsg.value = 'Username hanya boleh berisi huruf kecil, angka, dan underscore'
     return
   }
 
@@ -73,6 +73,7 @@ const handleSubmit = async () => {
               placeholder="Contoh: nitipkekita"
               class="w-full rounded-[12px] pl-10 pr-4 py-3 text-white text-[14px] outline-none transition-all placeholder-[#5a6478]"
               style="background-color: #161b28; border: 1px solid #252f42;"
+              @input="username = username.toLowerCase().replace(/[^a-z0-9_]/g, '')"
               required
             />
           </div>
