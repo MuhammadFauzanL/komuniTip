@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 
-// Views
+import LandingView from '../components/LandingView.vue'
 import LoginView from '../components/LoginView.vue'
 import RegisterView from '../components/RegisterView.vue'
 import ForgotPasswordView from '../components/ForgotPasswordView.vue'
@@ -14,7 +14,9 @@ import OnboardingUsernameStep from '../components/OnboardingUsernameStep.vue'
 const routes = [
   {
     path: '/',
-    redirect: '/dashboard'
+    name: 'landing',
+    component: LandingView,
+    meta: { guest: true }
   },
   {
     path: '/login',

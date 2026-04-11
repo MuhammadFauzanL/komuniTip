@@ -14,7 +14,7 @@ import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 
 const router = useRouter()
-const { user, logout } = useAuth()
+const { user, logout, updateMyProfile } = useAuth()
 
 const handleLogout = () => {
   logout()
@@ -30,14 +30,36 @@ const handleGoToOverlay = () => {
 }
 
 // Form state
-const displayName = ref('PPL 4')
-const contentCategory = ref('')
-const username = ref('PPL 4')
-const bio = ref('')
-const instagram = ref('ppl4.gaming')
-const youtube = ref('https://youtube.com/@ppl4gaming')
-const twitter = ref('ppl4.gaming')
-const email = ref('ppl4.gaming@email.com')
+const displayName = ref(user.value?.nama_lengkap || user.value?.nama || '')
+const username = ref(user.value?.username || '')
+const email = ref(user.value?.email || '')
+const isSaving = ref(false)
+// Fungsi untuk dipanggil saat tombol simpan diklik
+const handleSaveProfile = async () => {
+  isSaving.value = true
+  try {
+    await updateMyProfile({
+      nama: displayName.value,
+      username: username.value,
+      kategori: contentCategory.value,
+      bio: bio.value,
+      instagram: instagram.value,
+      youtube: youtube.value,
+      twitter: twitter.value
+    })
+    user.value.nama = displayName.value 
+    alert("Profil Kreator berhasil diperbarui!")
+  } catch (err) {
+    alert(err.message || 'Gagal menyimpan profil')
+  } finally {
+    isSaving.value = false
+  }
+}
+const contentCategory = ref(user.value?.kategori || '')
+const bio = ref(user.value?.bio || '')
+const instagram = ref(user.value?.instagram || '')
+const youtube = ref(user.value?.youtube || '')
+const twitter = ref(user.value?.twitter || '')
 </script>
 
 <template>
@@ -82,9 +104,9 @@ const email = ref('ppl4.gaming@email.com')
           <img :src="ProfileImage" class="w-full h-full object-cover" />
         </div>
         <div>
-          <div class="text-[15px] font-semibold text-white">PPL 4</div>
-          <div class="text-[12px] font-medium" style="color: #4c82f6;">Kreator Pro</div>
-        </div>
+          <div class="text-[15px] font-semibold text-white">{{ user?.nama_lengkap || 'Kreator' }}</div>
+          <div class="text-[12px] font-medium" style="color: #4c82f6;">Kreator </div>
+        </div>  
       </div>
 
       <!-- Navigation -->
@@ -121,6 +143,10 @@ const email = ref('ppl4.gaming@email.com')
           <span class="font-medium text-[14px]">Keluar</span>
         </button>
       </div>
+      <button @click="handleSaveProfile" :disabled="isSaving" class="flex items-center space-x-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition-all shadow-[0_8px_25px_rgba(37,99,235,0.3)] disabled:opacity-50">
+        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+        <span class="text-sm font-bold">{{ isSaving ? 'Menyimpan...' : 'Simpan Perubahan' }}</span>
+      </button>
     </aside>
 
     <!-- MAIN CONTENT -->
@@ -129,7 +155,7 @@ const email = ref('ppl4.gaming@email.com')
       <!-- Top header -->
       <div class="flex justify-between items-start mb-10 w-full">
         <div>
-          <h1 class="text-3xl font-bold mb-2">Halo, PPL 4!</h1>
+          <h1 class="text-3xl font-bold mb-2">Halo, {{ user?.nama_lengkap?.split(' ')[0] || 'Kreator' }}!</h1>
           <div class="flex items-center space-x-2 text-[#7a8ba8]">
              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
              <h2 class="text-xl font-bold text-white">Profil Kreator</h2>
@@ -137,9 +163,9 @@ const email = ref('ppl4.gaming@email.com')
           <p class="text-[14px] text-[#7a8ba8] mt-1 ml-7">Atur informasi publik dan detail akunmu di sini.</p>
         </div>
         <div class="flex items-center space-x-4">
-          <button class="flex items-center space-x-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition-all shadow-[0_8px_25px_rgba(37,99,235,0.3)]">
+          <button @click="handleSaveProfile" :disabled="isSaving" class="flex items-center space-x-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition-all shadow-[0_8px_25px_rgba(37,99,235,0.3)] disabled:opacity-50">
             <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-            <span class="text-sm font-bold">Simpan Perubahan</span>
+            <span class="text-sm font-bold">{{ isSaving ? 'Menyimpan...' : 'Simpan Perubahan' }}</span>
           </button>
         </div>
       </div>
@@ -160,8 +186,18 @@ const email = ref('ppl4.gaming@email.com')
               </div>
             </div>
 
-            <h3 class="text-2xl font-bold mb-1">PPL 4</h3>
-            <p class="text-blue-400 font-semibold text-sm mb-6">Gamer & Streamer</p>
+            <h3 class="text-2xl font-bold mb-1 text-white">{{ displayName || 'Kreator' }}</h3>
+            <p class="text-blue-400 font-semibold text-sm mb-6">@{{ username || 'username' }}</p>
+            <div v-if="contentCategory" class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6">
+              <span class="text-[11px] font-bold text-blue-400 uppercase tracking-wider">{{ contentCategory }}</span>
+            </div>
+            <div v-else class="mb-6">
+              <span class="text-[11px] font-medium text-gray-500 italic">Kategori belum dipilih</span>
+            </div>
+
+            <p class="text-[13px] text-gray-400 text-center mb-6 line-clamp-2 px-2 italic">
+               "{{ bio || 'Belum ada bio...' }}"
+            </p>
 
             <div class="w-full py-3 px-4 rounded-2xl border border-[#2c3953] bg-[#0d121e] flex justify-between items-center">
                <span class="text-[13px] text-gray-400 font-medium">Status Akun</span>

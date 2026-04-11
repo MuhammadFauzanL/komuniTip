@@ -349,20 +349,19 @@ const handleGoogleSuccess = async (response) => {
                 <span v-else>Buat Akun Sekarang</span>
               </button>
             </div>
-
           </form>
         </div>
 
         <!-- Back to Home button -->
         <div class="mt-6 flex w-full justify-center">
-          <a href="#"
-             class="inline-flex items-center gap-2 text-[13px] font-semibold transition-all hover:brightness-125 px-5 py-2.5 rounded-full border"
-             style="color: #5a6478; background-color: #111624; border-color: #1e2538; box-shadow: 0 8px 20px rgba(0,0,0,0.35);">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            Kembali ke Beranda
-          </a>
+          <router-link to="/"
+              class="inline-flex items-center gap-2 text-[13px] font-semibold transition-all hover:brightness-125 px-5 py-2.5 rounded-full border"
+              style="color: #5a6478; background-color: #111624; border-color: #1e2538; box-shadow: 0 8px 20px rgba(0,0,0,0.35);">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Kembali ke Beranda
+          </router-link>
         </div>
 
       </div>
