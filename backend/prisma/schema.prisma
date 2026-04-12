@@ -19,7 +19,13 @@ model User {
   provider            String    @default("google") // 'local' atau 'google'
   google_id           String?   @unique
   saldo_aktif         Decimal   @default(0.00) @db.Decimal(15, 2)
-  
+  role                UserRole  @default(BASIC)
+  kategori            String?   @db.VarChar(50)
+  bio                 String?   @db.Text
+  instagram           String?   @db.VarChar(100)
+  youtube             String?   @db.VarChar(200)
+  twitter             String?   @db.VarChar(100)
+
   // Field Tambahan untuk Fitur Lupa Password (UI Step 3)
   reset_token         String?   @unique @db.VarChar(255)
   reset_token_expires DateTime?
@@ -54,7 +60,17 @@ model OverlaySetting {
   streamerId          String   @unique
   min_donasi_alert    Decimal  @default(10000.00) @db.Decimal(15, 2)
   
+  // PERSIAPAN FITUR: Filter Kata Kotor Mandiri Kreator 
+  //opsional
+  banned_words        String?  @db.Text
+
   streamer            User     @relation(fields: [streamerId], references: [id], onDelete: Cascade)
 
   @@map("overlay_settings")
+}
+
+// Role untuk user
+enum UserRole {
+  ADMIN
+  BASIC
 }

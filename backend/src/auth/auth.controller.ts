@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post,Patch, Get, Body, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { CompleteUsernameDto } from './dto/complete-username.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -72,6 +73,26 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Token tidak valid atau kadaluarsa' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.new_password);
+  }
+
+  // GET untuk mengambil data profile
+  @Get('me')
+  @UseGuards(AuthGuard('jwt')) 
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Mengambil data profil terbaru untuk Dashboard' })
+  async getMe(@Request() req) {
+    return this.authService.getMyProfile(req.user.id);
+  }
+  
+  // PATCH untuk update profile
+  @Patch('me/update')
+  @UseGuards(AuthGuard('jwt')) 
+  @ApiOperation({ summary: 'Memperbarui data profil (Nama Tampilan & Username)' })
+  async updateProfile(
+    @Request() req,
+    @Body() body: UpdateProfileDto
+  ) {
+    return this.authService.updateProfile(req.user.id, body);
   }
 }
 

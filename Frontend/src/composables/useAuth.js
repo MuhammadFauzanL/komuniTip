@@ -1,12 +1,23 @@
 import { ref, computed } from 'vue'
 import api from '../services/api'
 
-// ─── Shared Reactive State (Singleton) ───
-// Declared outside the composable so all components share the same state.
-const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
+// ─── Shared Reactive State (Singleton) ───.
+let initialUser = null
+try {
+  const storedUser = localStorage.getItem('user')
+  if (storedUser && storedUser !== 'undefined') {
+    initialUser = JSON.parse(storedUser)  
+  }
+} catch (error) {
+  console.warn('WARNING: Data profil lokal korup/rusak. Mereset sesi otomatis...', error)
+  localStorage.removeItem('user')
+  localStorage.removeItem('access_token')
+}
+
+const user = ref(initialUser)
 const token = ref(localStorage.getItem('access_token'))
 
-const isAuthenticated = computed(() => !!token.value)
+const isAuthenticated = computed(() => !!token.value && token.value !== 'undefined')
 
 // ─── Helper: Persist Auth State ───
 function setAuth(authData) {
@@ -73,8 +84,13 @@ export function useAuth() {
   async function completeOnboarding(username) {
     const { data } = await api.post('/auth/onboarding', { username })
     setAuth(data.data)
-    return data
+    if (user.value) {
+    user.value = { ...user.value, username: username }
   }
+  
+  return data
+}
+  
 
   /**
    * Request password reset link
@@ -101,6 +117,35 @@ export function useAuth() {
     return data
   }
 
+  const fetchMyProfile = async () => {
+    try {
+      const response = await api.get('/auth/me')
+      // Update variabel user dengan data dari database asli
+      user.value = response.data.data
+      // Timpa data user lama di LocalStorage
+      localStorage.setItem('user', JSON.stringify(response.data.data)) 
+      return response.data.data
+    } catch (error) {
+      console.error('Gagal mengambil data profil terbaru:', error)
+      if (error.response?.status === 401) {
+        logout();
+      }
+    }
+  }
+  const updateMyProfile = async (profileData) => {
+    // Tembak backend dengan data yang baru
+    const { data } = await api.patch('/auth/me/update', profileData)
+    
+    // Timpa memori browser dengan data terupdate (pakai data.data karena interseptor)
+    user.value = data.data.user
+    localStorage.setItem('user', JSON.stringify(data.data.user)) 
+    // Jangan lupa tokennya juga kalau ikut terganti
+    token.value = data.data.access_token
+    localStorage.setItem('access_token', data.data.access_token)
+    
+    return data.data
+  }
+
   return {
     user,
     token,
@@ -112,5 +157,7 @@ export function useAuth() {
     completeOnboarding,
     resetPassword,
     logout,
+    fetchMyProfile,
+    updateMyProfile,
   }
 }

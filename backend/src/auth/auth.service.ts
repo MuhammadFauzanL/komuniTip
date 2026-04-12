@@ -22,8 +22,15 @@ export class AuthService {
   }
 
   // ─── HELPER: Generate internal JWT ───
-  private generateAuthResponse(user: any) {
-    const payload = { sub: user.id, email: user.email, username: user.username };
+ private generateAuthResponse(user: any) {
+    // Memasukkan role ke dalam Payload JWT agar ikut dienkripsi
+    const payload = { 
+      sub: user.id, 
+      email: user.email, 
+      username: user.username,
+      role: user.role 
+    };
+    
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -32,7 +39,15 @@ export class AuthService {
         username: user.username,
         email: user.email,
         provider: user.provider,
+        role: user.role, 
+        kategori: user.kategori,
+        bio: user.bio,
+        instagram: user.instagram,
+        youtube: user.youtube,
+        twitter: user.twitter,
       },
+
+
       require_onboarding: user.username === null,
     };
   }
@@ -153,7 +168,8 @@ export class AuthService {
       // 5. Terbitkan Super Token (JWT) milik aplikasi kita
       return this.generateAuthResponse(user);
 
-    } catch (error) {
+    }catch (error) {
+      console.error('GOOGLE AUTH ERROR DETAIL:', error);
       throw new UnauthorizedException('Token Google ditolak atau kadaluarsa');
     }
   }
@@ -248,4 +264,83 @@ export class AuthService {
 
     return { message: 'Password berhasil diperbarui. Silakan login kembali.' };
   }
+
+  // ─── AMBIL PROFIL (DASHBOARD) ───
+  async getMyProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+          select: {
+        id: true,
+        email: true,
+        nama_lengkap: true,
+        username: true,
+        provider: true,
+        role: true,
+        saldo_aktif: true,
+        kategori: true,
+        bio: true,
+        instagram: true,
+        youtube: true,
+        twitter: true,
+        createdAt: true,
+      }
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User tidak ditemukan');
+    }
+
+    return user;
+  }
+
+  // ─── UPDATE PROFIL KREATOR ───
+    async updateProfile(
+      userId: string, data: { 
+        nama?: string; 
+        username?: string; 
+        kategori?: string; 
+        bio?: string; 
+        instagram?: string; 
+        youtube?: string; 
+        twitter?: string 
+        }
+      ) 
+    { 
+    // Cegah kembar username
+    if (data.username) {
+      const existing = await this.prisma.user.findUnique({ where: { username: data.username } });
+      if (existing && existing.id !== userId) {
+        throw new BadRequestException('Username sudah digunakan oleh kreator lain');
+      }
+    }
+    // Update database
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+     nama_lengkap: data.nama,
+        username: data.username,
+        kategori: data.kategori,
+        bio: data.bio,
+        instagram: data.instagram,
+        youtube: data.youtube,
+        twitter: data.twitter,
+      },
+      select: {
+        id: true,
+        email: true,
+        nama_lengkap: true,
+        username: true,
+        role: true,
+        saldo_aktif: true,
+        kategori: true,
+        bio: true,
+        instagram: true,
+        youtube: true,
+        twitter: true,
+
+      }
+    });
+    return this.generateAuthResponse(updatedUser);
+  }
+
 }

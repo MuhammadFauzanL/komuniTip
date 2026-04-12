@@ -12,11 +12,15 @@ import IconCoin from '../assets/Icon_coin.png'
 import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
+import { onMounted } from 'vue'
 
-const emit = defineEmits([]) // Navigation handled by router
-
+const emit = defineEmits([]) 
 const router = useRouter()
-const { logout } = useAuth()
+const { user, logout, fetchMyProfile } = useAuth() 
+onMounted(async () => {
+  await fetchMyProfile()
+})
+
 
 const handleLogout = () => {
   logout()
@@ -24,9 +28,11 @@ const handleLogout = () => {
 }
 
 const copyLink = () => {
-  navigator.clipboard.writeText('komunitip.id/Brosan')
-  alert('Link copied!')
+  const link = `komunitip.id/${user.value?.username || 'username'}`
+  navigator.clipboard.writeText(link)
+  alert('Link tersalin: ' + link)
 }
+
 
 const handleGoToProfile = () => {
   router.push('/profile')
@@ -91,8 +97,12 @@ const handleGoToOverlay = () => {
           <img :src="ProfileImage" class="w-full h-full object-cover" />
         </div>
         <div>
-          <div class="text-[15px] font-semibold text-white">PPL 4</div>
-          <div class="text-[12px] font-medium" style="color: #4c82f6;">Kreator Pro</div>
+          <div class="text-[15px] font-semibold text-white">
+            {{ user?.nama_lengkap || 'Kreator' }}
+          </div>
+          <div class="text-[12px] text-gray-400 mt-0.5">
+  {{ user?.role === 'ADMIN' ? 'Admin' : 'Kreator' }}
+</div>
         </div>
       </div>
 
@@ -137,7 +147,9 @@ const handleGoToOverlay = () => {
       <!-- Top header -->
       <div class="flex justify-between items-start mb-16 w-full relative z-30">
         <div>
-          <h1 class="text-3xl font-bold mb-2">Halo, PPL 4!</h1>
+          <h1 class="text-3xl font-bold mb-2">
+            Halo, {{ user?.nama_lengkap?.split(' ')[0] || 'Kreator' }}!
+          </h1>
           <p class="text-[15px] text-[#7a8ba8]">Siap untuk stream hari ini?</p>
         </div>
         <div class="flex items-center space-x-4">
@@ -168,7 +180,9 @@ const handleGoToOverlay = () => {
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
             <span>TOTAL PENDAPATAN</span>
           </div>
-          <div class="text-[56px] font-[800] tracking-tight leading-none mb-6">Rp 3.333.333</div>
+          <div class="text-[28px] font-bold text-white mb-2">
+            Rp{{ Number(user?.saldo_aktif || 0).toLocaleString('id-ID') }}
+          </div>
           <div class="flex items-center space-x-3 text-sm">
             <div class="flex items-center space-x-1 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">
               <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
@@ -217,7 +231,9 @@ const handleGoToOverlay = () => {
               
               <div class="flex space-x-2">
                 <div class="flex-1 flex items-center justify-between px-3 py-2.5 rounded-xl border border-[#212b42] bg-[#0d121e]">
-                   <span class="text-[13px] text-gray-400 truncate">komunitip.id/Brosan</span>
+                   <span class="text-[13px] text-gray-400 truncate">
+                    komunitip.id/{{ user?.username || 'username' }}
+                   </span>
                    <button @click="copyLink" class="text-gray-400 hover:text-white p-1 transition-colors">
                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                    </button>
