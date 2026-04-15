@@ -115,7 +115,7 @@ const handleReset = async () => {
 
         <!-- Form container -->
         <div class="w-full rounded-[28px] px-8 pb-8 pt-20 relative"
-             style="background-color: #111624; border: 1px solid #242d42; box-shadow: 0 30px 60px rgba(0,0,0,0.55);">
+             style="background-color: #111624; border: 1.5px solid #2e3a51; box-shadow: 0 30px 60px rgba(0,0,0,0.55);">
 
           <!-- Headings -->
           <div class="text-center mb-8">
@@ -134,22 +134,22 @@ const handleReset = async () => {
                   :type="showPassword ? 'text' : 'password'"
                   v-model="password"
                   placeholder="Min. 8 karakter"
-                  class="w-full rounded-[12px] px-4 py-3.5 text-white text-[14px] outline-none transition-all placeholder-[#5a6478] pr-12 focus:border-blue-500"
-                  style="background-color: #1c2233; border: 1px solid #2d3748;"
+                  class="w-full rounded-[16px] px-4 py-3.5 text-white text-[14px] font-medium outline-none transition-all placeholder-gray-500 pr-12 focus:border-blue-500"
+                  style="background-color: #1a2235; border: 1.5px solid #334155;"
                   required
                 />
                 <button 
                   type="button"
                   @click="showPassword = !showPassword"
-                  class="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a6478] hover:text-white transition-colors focus:outline-none"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors focus:outline-none"
                 >
-                  <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
                   </svg>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 1.274-4.057 5.064-7 9.542-7 1.225 0 2.39.215 3.475.608M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
                   </svg>
                 </button>
               </div>
@@ -163,22 +163,22 @@ const handleReset = async () => {
                   :type="showConfirmPassword ? 'text' : 'password'"
                   v-model="confirmPassword"
                   placeholder="Masukan Konfirmasi Password Baru"
-                  class="w-full rounded-[12px] px-4 py-3.5 text-white text-[14px] outline-none transition-all placeholder-[#5a6478] pr-12 focus:border-blue-500"
-                  style="background-color: #1c2233; border: 1px solid #2d3748;"
+                  class="w-full rounded-[16px] px-4 py-3.5 text-white text-[14px] font-medium outline-none transition-all placeholder-gray-500 pr-12 focus:border-blue-500"
+                  style="background-color: #1a2235; border: 1.5px solid #334155;"
                   required
                 />
                 <button 
                   type="button"
                   @click="showConfirmPassword = !showConfirmPassword"
-                  class="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a6478] hover:text-white transition-colors focus:outline-none"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors focus:outline-none"
                 >
-                  <svg v-if="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  <svg v-if="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
                   </svg>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 1.274-4.057 5.064-7 9.542-7 1.225 0 2.39.215 3.475.608M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
                   </svg>
                 </button>
               </div>
@@ -187,10 +187,10 @@ const handleReset = async () => {
             <!-- Submit -->
             <div class="pt-2">
               <button type="submit" :disabled="loading"
-                      class="w-full text-white font-[800] text-[16px] py-[14px] rounded-[14px] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                      style="background: #2563eb; box-shadow: 0 4px 15px rgba(37,99,235,0.4), inset 0 -3px 0 rgba(0,0,0,0.2);">
+                      class="w-full text-white font-[700] text-[15px] py-3.5 rounded-[16px] transition-all hover:translate-y-[2px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed"
+                      style="background: #2563eb; border: 2px solid #60a5fa; box-shadow: 0 4px 0 #1e3a8a;">
                 <span v-if="loading">Menyimpan...</span>
-                <span v-else>Save</span>
+                <span v-else>Simpan Password Baru</span>
               </button>
             </div>
 

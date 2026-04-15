@@ -78,7 +78,7 @@ const handleReset = async () => {
 
       <!-- Form card -->
       <div class="w-full rounded-[28px] px-8 pb-8 pt-24 border relative"
-           style="background-color: #111624; border-color: #242d42; box-shadow: 0 30px 60px rgba(0,0,0,0.55);">
+           style="background-color: #111624; border: 1.5px solid #2e3a51; box-shadow: 0 30px 60px rgba(0,0,0,0.55);">
 
         <!-- Top shimmer -->
         <div class="absolute top-0 left-0 w-full h-[1px] rounded-t-[28px]"
@@ -119,8 +119,8 @@ const handleReset = async () => {
                 type="email"
                 v-model="email"
                 placeholder="nama@emailanda.com"
-                class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all"
-                style="background-color: #161b28; border: 1px solid #252f42;"
+                class="w-full rounded-[16px] px-4 py-3 text-white text-[14px] font-medium outline-none transition-all placeholder-gray-500"
+                style="background-color: #1a2235; border: 1.5px solid #334155;"
                 required
               />
           </div>
@@ -128,8 +128,8 @@ const handleReset = async () => {
           <!-- Submit -->
           <div class="pt-2">
             <button type="submit" :disabled="loading"
-                    class="w-full text-white font-[700] text-[15px] py-[14px] rounded-[12px] transition-all hover:brightness-110 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-                    style="background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 24px rgba(37,99,235,0.38), inset 0 -2px 0 rgba(0,0,0,0.14);">
+                    class="w-full text-white font-[700] text-[15px] py-3.5 rounded-[16px] transition-all hover:translate-y-[2px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="background: #2563eb; border: 2px solid #60a5fa; box-shadow: 0 4px 0 #1e3a8a;">
               <span v-if="loading">Memproses...</span>
               <span v-else>Kirim Link Reset</span>
             </button>
