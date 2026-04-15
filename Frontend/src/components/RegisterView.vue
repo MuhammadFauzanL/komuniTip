@@ -187,16 +187,17 @@ const handleGoogleSuccess = async (response) => {
       <div class="flex-1 w-full max-w-[520px] flex flex-col items-center lg:items-end mx-auto lg:mt-0 relative">
         
         <!-- Login Link Top Right -->
-        <div class="w-full flex justify-end items-center gap-3 text-[14px] font-medium text-[#7a8ba8] mb-8">
+        <div class="w-full flex justify-end items-center gap-3 text-[15px] font-bold text-[#7a8ba8] mb-8">
           Punya akun? 
-          <router-link to="/login" class="bg-[#3b82f6] hover:brightness-110 text-white px-6 py-2.5 rounded-[12px] font-[700] transition-all" style="box-shadow: 0 4px 16px rgba(59,130,246,0.38), inset 0 -2px 0 rgba(0,0,0,0.14);">
+          <router-link to="/login" class="px-6 py-2 text-[15px] font-bold text-white rounded-[16px] transition-all hover:translate-y-[2px] active:translate-y-[4px]"
+             style="background: #2563eb; border: 2px solid #60a5fa; box-shadow: 0 4px 0 #1e3a8a;">
             Masuk
           </router-link>
         </div>
 
         <!-- Form card -->
-        <div class="w-full rounded-[28px] p-8 border relative overflow-hidden"
-             style="background-color: #111624; border-color: #242d42; box-shadow: 0 30px 60px rgba(0,0,0,0.55);">
+        <div class="w-full rounded-[28px] p-8 relative overflow-hidden"
+             style="background-color: #111624; border: 1.5px solid #2e3a51; box-shadow: 0 30px 60px rgba(0,0,0,0.55);">
 
           <!-- Top shimmer -->
           <div class="absolute top-0 left-0 w-full h-[1px]"
@@ -226,48 +227,51 @@ const handleGoogleSuccess = async (response) => {
           </div>
 
           <!-- Form -->
-          <form @submit.prevent="handleRegister" class="space-y-4">
+          <form @submit.prevent="handleRegister" class="space-y-5">
 
             <!-- Alert Error & Success -->
             <div v-if="errorMsg" class="p-3 text-sm text-red-400 bg-red-900/30 border border-red-800 rounded-lg text-center">{{ errorMsg }}</div>
             <div v-if="successMsg" class="p-3 text-sm text-emerald-400 bg-emerald-900/30 border border-emerald-800 rounded-lg text-center">{{ successMsg }}</div>
 
-            <!-- Nama Lengkap -->
-            <div class="space-y-1.5 text-left">
-              <label class="text-[13px] font-semibold text-white block">Nama Lengkap</label>
-              <input
-                type="text"
-                v-model="fullName"
-                placeholder="Contoh: Si Nitip"
-                class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all placeholder-[#5a6478]"
-                style="background-color: #161b28; border: 1px solid #252f42;"
-                required
-              />
-            </div>
+            <!-- Grid for Nama Lengkap & Username -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Nama Lengkap -->
+              <div class="space-y-1.5 text-left">
+                <label class="text-[13px] font-bold text-white block">Nama Lengkap</label>
+                <input
+                  type="text"
+                  v-model="fullName"
+                  placeholder="Contoh: Ihsan"
+                  class="w-full rounded-[16px] px-4 py-3 text-white text-[14px] font-medium outline-none transition-all placeholder-gray-500"
+                  style="background-color: #1a2235; border: 1.5px solid #334155;"
+                  required
+                />
+              </div>
 
-            <!-- Username -->
-            <div class="space-y-1.5 text-left">
-              <label class="text-[13px] font-semibold text-white block">Username <span class="text-[#7a8ba8] font-normal">(tanpa spasi)</span></label>
-              <input
-                type="text"
-                v-model="username"
-                placeholder="Contoh: nitipkekita"
-                class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all placeholder-[#5a6478]"
-                style="background-color: #161b28; border: 1px solid #252f42;"
-                @input="username = username.toLowerCase().replace(/[^a-z0-9_]/g, '')"
-                required
-              />
+              <!-- Username -->
+              <div class="space-y-1.5 text-left">
+                <label class="text-[13px] font-bold text-white block">Username</label>
+                <input
+                  type="text"
+                  v-model="username"
+                  placeholder="komunitip.id/username"
+                  class="w-full rounded-[16px] px-4 py-3 text-white text-[14px] font-medium outline-none transition-all placeholder-gray-500"
+                  style="background-color: #1a2235; border: 1.5px solid #334155;"
+                  @input="username = username.toLowerCase().replace(/[^a-z0-9_]/g, '')"
+                  required
+                />
+              </div>
             </div>
 
             <!-- Email -->
             <div class="space-y-1.5 text-left">
-              <label class="text-[13px] font-semibold text-white block">Alamat Email</label>
+              <label class="text-[13px] font-bold text-white block">Alamat Email</label>
               <input
                 type="email"
                 v-model="email"
                 placeholder="nama@email.com"
-                class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all placeholder-[#5a6478]"
-                style="background-color: #161b28; border: 1px solid #252f42;"
+                class="w-full rounded-[16px] px-4 py-3 text-white text-[14px] font-medium outline-none transition-all placeholder-gray-500"
+                style="background-color: #1a2235; border: 1.5px solid #334155;"
                 required
               />
             </div>
@@ -276,20 +280,20 @@ const handleGoogleSuccess = async (response) => {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <!-- Password -->
               <div class="space-y-1.5 text-left">
-                <label class="text-[13px] font-semibold text-white block">Password</label>
+                <label class="text-[13px] font-bold text-white block">Password</label>
                 <div class="relative">
                   <input
                     :type="showPassword ? 'text' : 'password'"
                     v-model="password"
                     placeholder="Min. 8 karakter"
-                    class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all placeholder-[#5a6478] pr-12"
-                    style="background-color: #161b28; border: 1px solid #252f42;"
+                    class="w-full rounded-[16px] px-4 py-3 text-white text-[14px] font-medium outline-none transition-all placeholder-gray-500 pr-12"
+                    style="background-color: #1a2235; border: 1.5px solid #334155;"
                     required
                   />
                   <button 
                     type="button"
                     @click="showPassword = !showPassword"
-                    class="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a6478] hover:text-[#4a9dff] transition-colors focus:outline-none"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none"
                   >
                     <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -305,20 +309,20 @@ const handleGoogleSuccess = async (response) => {
 
               <!-- Konfirmasi Password -->
               <div class="space-y-1.5 text-left">
-                <label class="text-[13px] font-semibold text-white block">Konfirmasi Password</label>
+                <label class="text-[13px] font-bold text-white block">Konfirmasi Password</label>
                 <div class="relative">
                   <input
                     :type="showConfirmPassword ? 'text' : 'password'"
                     v-model="confirmPassword"
                     placeholder="Ulangi password"
-                    class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all placeholder-[#5a6478] pr-12"
-                    style="background-color: #161b28; border: 1px solid #252f42;"
+                    class="w-full rounded-[16px] px-4 py-3 text-white text-[14px] font-medium outline-none transition-all placeholder-gray-500 pr-12"
+                    style="background-color: #1a2235; border: 1.5px solid #334155;"
                     required
                   />
                   <button 
                     type="button"
                     @click="showConfirmPassword = !showConfirmPassword"
-                    class="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a6478] hover:text-[#4a9dff] transition-colors focus:outline-none"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none"
                   >
                     <svg v-if="!showConfirmPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -334,17 +338,17 @@ const handleGoogleSuccess = async (response) => {
             </div>
 
             <!-- Consent -->
-            <div class="pt-2">
-              <p class="text-[12px] font-medium" style="color: #7a8ba8;">
-                Saya setuju dengan <a href="#" class="font-bold hover:underline" style="color: #4a9dff;">Syarat & Ketentuan</a> dan <a href="#" class="font-bold hover:underline" style="color: #4a9dff;">Kebijakan Privasi</a>
+            <div class="pt-3 pb-1 text-center">
+              <p class="text-[12px] font-medium" style="color: #9ca3af;">
+                Saya setuju dengan <a href="#" class="font-bold hover:underline" style="color: #60a5fa;">Syarat & Ketentuan</a> dan <a href="#" class="font-bold hover:underline" style="color: #60a5fa;">Kebijakan Privasi</a>
               </p>
             </div>
 
             <!-- Submit -->
-            <div class="pt-4">
+            <div class="pt-1">
               <button type="submit" :disabled="loading"
-                      class="w-full text-white font-[700] text-[15px] py-[14px] rounded-[12px] transition-all hover:brightness-110 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-                      style="background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 24px rgba(37,99,235,0.38), inset 0 -2px 0 rgba(0,0,0,0.14);">
+                      class="w-full text-white font-[700] text-[15px] py-3.5 rounded-[16px] transition-all hover:translate-y-[2px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed"
+                      style="background: #2563eb; border: 2px solid #60a5fa; box-shadow: 0 4px 0 #1e3a8a;">
                 <span v-if="loading">Memproses...</span>
                 <span v-else>Buat Akun Sekarang</span>
               </button>

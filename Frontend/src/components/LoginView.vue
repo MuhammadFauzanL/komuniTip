@@ -207,8 +207,8 @@ const handleGoogleError = (error) => {
       <div class="flex-1 w-full max-w-[460px] flex flex-col items-center lg:mt-[90px] mx-auto">
 
         <!-- Form card -->
-        <div class="w-full rounded-[28px] p-8 border relative overflow-hidden"
-             style="background-color: #111624; border-color: #242d42; box-shadow: 0 30px 60px rgba(0,0,0,0.55);">
+        <div class="w-full rounded-[28px] p-8 relative overflow-hidden"
+             style="background-color: #111624; border: 1.5px solid #2e3a51; box-shadow: 0 30px 60px rgba(0,0,0,0.55);">
 
           <!-- Top shimmer -->
           <div class="absolute top-0 left-0 w-full h-[1px]"
@@ -243,33 +243,33 @@ const handleGoogleError = (error) => {
 
             <!-- Email / Username -->
             <div class="space-y-1.5 text-left">
-              <label class="text-[13px] font-semibold text-white block">Email atau Username</label>
+              <label class="text-[13px] font-bold text-white block">Email atau Username</label>
               <input
                 type="text"
                 v-model="identifier"
                 placeholder="email@contoh.com atau username"
-                class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all"
-                style="background-color: #161b28; border: 1px solid #252f42;"
+                class="w-full rounded-[16px] px-4 py-3 text-white text-[14px] font-medium outline-none transition-all placeholder-gray-500"
+                style="background-color: #1a2235; border: 1.5px solid #334155;"
                 required
               />
             </div>
 
             <!-- Password -->
             <div class="space-y-1.5 text-left">
-              <label class="text-[13px] font-semibold text-white block">Password</label>
+              <label class="text-[13px] font-bold text-white block">Password</label>
               <div class="relative">
                 <input
                   :type="showPassword ? 'text' : 'password'"
                   v-model="password"
                   placeholder="Ketik password kamu"
-                  class="w-full rounded-[12px] px-4 py-3 text-white text-[14px] outline-none transition-all pr-12"
-                  style="background-color: #161b28; border: 1px solid #252f42;"
+                  class="w-full rounded-[16px] px-4 py-3 text-white text-[14px] font-medium outline-none transition-all placeholder-gray-500 pr-12"
+                  style="background-color: #1a2235; border: 1.5px solid #334155;"
                   required
                 />
                 <button 
                   type="button"
                   @click="showPassword = !showPassword"
-                  class="absolute right-4 top-1/2 -translate-y-1/2 text-[#5a6478] hover:text-[#4a9dff] transition-colors focus:outline-none"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors focus:outline-none"
                 >
                   <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -284,28 +284,28 @@ const handleGoogleError = (error) => {
             </div>
 
             <!-- Remember me / Forgot password -->
-            <div class="flex items-center justify-between text-[13px]">
+            <div class="flex items-center justify-between text-[13px] pt-1">
               <div class="flex items-center">
-                <input type="checkbox" v-model="rememberMe" id="remember" class="w-4 h-4 rounded border-[#252f42] bg-[#161b28] text-blue-600 focus:ring-blue-500" />
-                <label for="remember" class="ml-2 text-[#7a8ba8] cursor-pointer">Ingat saya</label>
+                <input type="checkbox" v-model="rememberMe" id="remember" class="w-4 h-4 rounded border-[#334155] bg-[#1e293b] text-blue-600 focus:ring-blue-500" />
+                <label for="remember" class="ml-2 text-[#9ca3af] font-medium cursor-pointer">Ingat saya</label>
               </div>
-              <router-link to="/forgot-password" class="text-[#4a9dff] font-semibold hover:underline">Lupa password?</router-link>
+              <router-link to="/forgot-password" class="font-bold hover:underline" style="color: #60a5fa;">Lupa password?</router-link>
             </div>
 
             <!-- Submit -->
-            <div class="pt-5">
+            <div class="pt-2">
               <button type="submit" :disabled="loading"
-                      class="w-full text-white font-[700] text-[15px] py-[14px] rounded-[12px] transition-all hover:brightness-110 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-                      style="background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 24px rgba(37,99,235,0.38), inset 0 -2px 0 rgba(0,0,0,0.14);">
+                      class="w-full text-white font-[700] text-[15px] py-3.5 rounded-[16px] transition-all hover:translate-y-[2px] active:translate-y-[4px] disabled:opacity-50 disabled:cursor-not-allowed"
+                      style="background: #2563eb; border: 2px solid #60a5fa; box-shadow: 0 4px 0 #1e3a8a;">
                 <span v-if="loading">Memproses...</span>
                 <span v-else>Masuk</span>
               </button>
             </div>
 
             <!-- Register link -->
-            <div class="text-center text-[14px] pt-4" style="color: #5a6478;">
+            <div class="text-center text-[14px] pt-4" style="color: #6b7280;">
               Belum punya akun? 
-              <router-link to="/register" class="font-bold ml-1 hover:opacity-80 transition-opacity" style="color: #4a9dff;">Daftar gratis</router-link>
+              <router-link to="/register" class="font-bold ml-1 hover:opacity-80 transition-opacity" style="color: #60a5fa;">Daftar gratis</router-link>
             </div>
 
           </form>
