@@ -22,9 +22,12 @@ export class RegisterDto {
   })
   username: string;
 
-  @ApiProperty({ example: 'SandiRahasia123', description: 'Minimal 6 karakter' })
+  @ApiProperty({ example: 'SandiRahasia123', description: 'Minimal 8 karakter, mengandung huruf dan angka' })
   @IsString()
   @IsNotEmpty()
-  @MinLength(6, { message: 'Password minimal 6 karakter' })
+  @MinLength(8, { message: 'Password minimal 8 karakter' })
+  @Matches(/^(?=.*[a-zA-Z])(?=.*\d)/, {
+    message: 'Password harus mengandung minimal 1 huruf dan 1 angka',
+  })
   password: string;
 }

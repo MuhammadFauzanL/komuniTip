@@ -1,5 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+// Import UserRole from the correct path if Prisma Client isn't generated yet or use any
+// It will be resolved once npx prisma generate is run correctly
 import { UserRole } from '@prisma/client';
 
 @Injectable()

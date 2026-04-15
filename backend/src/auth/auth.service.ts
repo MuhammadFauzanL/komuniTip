@@ -201,15 +201,15 @@ export class AuthService {
       where: { email },
     });
 
+    // Best practice: selalu kembalikan response yang sama
+    // agar attacker tidak bisa mengetahui email mana yang terdaftar
     if (!user) {
-      throw new BadRequestException('Email tidak terdaftar di sistem kami');
+      return { message: 'Jika email terdaftar, link reset password telah dikirim ke email kamu' };
     }
 
-    // 2. Jika akun Google-only, tolak
+    // Jika akun Google-only, jangan bocorkan info — kembalikan pesan yang sama
     if (user.provider === 'google' && !user.password_hash) {
-      throw new BadRequestException(
-        'Akun ini terdaftar via Google. Silakan login menggunakan Google.',
-      );
+      return { message: 'Jika email terdaftar, link reset password telah dikirim ke email kamu' };
     }
 
     // 3. Generate reset token (secure random UUID)

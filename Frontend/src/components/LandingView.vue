@@ -37,7 +37,7 @@ const goToRegister = () => router.push('/register')
     <!-- ───────── NAVBAR (Capsule Style) ───────── -->
     <div class="fixed left-0 w-full z-50 px-4 transition-all duration-500" :class="isScrolled ? 'top-3' : 'top-6'">
       <nav class="mx-auto bg-[#0d121f]/80 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-between shadow-2xl transition-all duration-500 overflow-hidden"
-           :class="isScrolled ? 'max-w-3xl px-5 py-2' : 'max-w-5xl px-8 py-4'">
+           :class="isScrolled ? 'max-w-3xl px-5 py-2' : 'md:max-w-5xl px-8 py-4'">
         <!-- Logo -->
         <div class="flex items-center gap-2 transition-all duration-500">
           <img :src="StandingMascot" alt="Logo" class="w-8 h-8 object-contain" />

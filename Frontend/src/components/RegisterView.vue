@@ -116,7 +116,7 @@ const handleGoogleSuccess = async (response) => {
 
 
     <!-- ───────── Main layout ───────── -->
-    <div class="relative z-10 flex-1 w-full flex flex-col lg:flex-row items-center lg:items-start justify-between max-w-7xl mx-auto px-6 lg:px-12 pt-4 pb-10 gap-8">
+    <div class="relative z-10 flex-1 w-full flex flex-col xl:flex-row items-center xl:items-start justify-between max-w-7xl mx-auto px-6 xl:px-12 pt-4 pb-10 gap-8 xl:pt-[4%]">
 
       <!-- ═══ LEFT SECTION ═══ -->
       <div class="flex-1 w-full max-w-xl flex flex-col">

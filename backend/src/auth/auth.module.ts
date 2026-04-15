@@ -9,9 +9,8 @@ import { JwtStrategy } from './jwt.strategy';
   imports: [
     PassportModule,
     JwtModule.register({
-      // Disarankan JWT_SECRET disimpan di .env
-      secret: process.env.JWT_SECRET || 'super-secret',
-      signOptions: { expiresIn: '7d' }, // Login valid selama 7 hari
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '7d' },
     }),
   ],
   providers: [AuthService, JwtStrategy],

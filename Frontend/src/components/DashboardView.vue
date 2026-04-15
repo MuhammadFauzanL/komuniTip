@@ -13,14 +13,31 @@ import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 import { onMounted } from 'vue'
+import api from '../services/api'
 
 const emit = defineEmits([]) 
 const router = useRouter()
 const { user, logout, fetchMyProfile } = useAuth() 
+
+const donations = ref([])
+const loading = ref(true)
+
 onMounted(async () => {
   await fetchMyProfile()
+  await fetchDonations()
 })
 
+const fetchDonations = async () => {
+  try {
+    loading.value = true
+    const response = await api.get('/donation/my')
+    donations.value = response.data.data.donations || []
+  } catch (error) {
+    console.error('Failed to fetch donations:', error)
+  } finally {
+    loading.value = false
+  }
+}
 
 const handleLogout = () => {
   logout()
@@ -33,7 +50,6 @@ const copyLink = () => {
   alert('Link tersalin: ' + link)
 }
 
-
 const handleGoToProfile = () => {
   router.push('/profile')
 }
@@ -44,6 +60,37 @@ const handleGoToDashboard = () => {
 
 const handleGoToOverlay = () => {
   router.push('/overlay')
+}
+
+// Format Time Ago
+const timeAgo = (dateStr) => {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now - date) / 1000)
+  
+  if (diffInSeconds < 60) return `${diffInSeconds} detik lalu`
+  const diffInMinutes = Math.floor(diffInSeconds / 60)
+  if (diffInMinutes < 60) return `${diffInMinutes} menit lalu`
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  if (diffInHours < 24) return `${diffInHours} jam lalu`
+  const diffInDays = Math.floor(diffInHours / 24)
+  return `${diffInDays} hari lalu`
+}
+
+// Generate Initial
+const getInitials = (name) => {
+  if (!name) return '?'
+  return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+}
+
+// Get Random Color based on string
+const getAvatarColor = (str) => {
+  const colors = ['#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9', '#10b981']
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return colors[Math.abs(hash) % colors.length]
 }
 </script>
 
@@ -285,127 +332,71 @@ const handleGoToOverlay = () => {
         <div class="rounded-[28px] border border-[#212b42] p-2" style="background-color: #101623;">
           <div class="flex flex-col space-y-1">
             
-            <!-- Item 1 -->
-            <div class="flex items-center justify-between p-4 rounded-2xl hover:bg-[#161d2d] transition-colors">
-              <div class="flex items-center space-x-4">
-                <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-[15px]" style="background-color: #3b82f6;">AF</div>
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <span class="font-bold text-[15px] text-white">hahahahahaqi</span>
-                    <span class="text-[#516382] text-[12px]">haqi@gmail.com</span>
-                    <span class="px-2 py-0.5 rounded text-[11px] font-bold text-emerald-400 bg-emerald-500/10">+Rp 50k</span>
+            <!-- Skeleton Loader -->
+            <template v-if="loading">
+              <div v-for="i in 3" :key="i" class="flex items-center justify-between p-4 rounded-2xl animate-pulse">
+                <div class="flex items-center space-x-4">
+                  <div class="w-11 h-11 rounded-full bg-[#1c263e]"></div>
+                  <div class="space-y-2">
+                    <div class="h-4 bg-[#1c263e] rounded w-48"></div>
+                    <div class="h-3 bg-[#1c263e] rounded w-64"></div>
                   </div>
-                  <div class="text-[14px] text-[#94a3b8] mt-1 line-clamp-1">Kontennya selalu keren banget! Keep it up ya kak! 🔥</div>
                 </div>
               </div>
-              <div class="flex flex-col items-end hidden sm:flex">
-                <span class="text-[11px] text-[#516382] mb-2 font-medium">2 menit lalu</span>
-                <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#043324] text-emerald-400 bg-[#071d16] text-[11px] font-bold">
-                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                  <span>Aman</span>
-                </div>
+            </template>
+
+            <!-- Empty State -->
+            <div v-else-if="donations.length === 0" class="flex flex-col items-center justify-center p-10 text-center">
+              <div class="w-16 h-16 rounded-full bg-[#1c263e] flex items-center justify-center mb-4 text-gray-500">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4M8 16l-4-4 4-4"></path></svg>
               </div>
+              <h3 class="text-white font-bold text-lg mb-1">Belum ada dukungan</h3>
+              <p class="text-[13px] text-gray-500 max-w-sm">Dukungan dari penontonmu akan muncul di sini. Bagikan link My Page-mu untuk mulai menerima dukungan!</p>
             </div>
 
-            <!-- Divider -->
-            <div class="h-[1px] w-full bg-[#1c263e]"></div>
-
-            <!-- Item 2 -->
-            <div class="flex items-center justify-between p-4 rounded-2xl hover:bg-[#161d2d] transition-colors bg-[#1a111a]">
-              <div class="flex items-center space-x-4">
-                <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-[15px]" style="background-color: #f59e0b;">LP</div>
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <span class="font-bold text-[15px] text-white">fauzan lubada</span>
-                    <span class="text-[#516382] text-[12px]">lubada@gmail.com</span>
-                    <span class="px-2 py-0.5 rounded text-[11px] font-bold text-emerald-400 bg-emerald-500/10">+Rp 25k</span>
+            <!-- Dynamic Items -->
+            <template v-else>
+              <template v-for="(donation, index) in donations" :key="donation.id">
+                <div class="flex items-center justify-between p-4 rounded-2xl hover:bg-[#161d2d] transition-colors" :class="{'bg-[#1a111a]': donation.status === 'FAILED'}">
+                  <div class="flex items-center space-x-4">
+                    <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-[15px]" 
+                         :style="{ backgroundColor: getAvatarColor(donation.nama_donatur) }">
+                      {{ getInitials(donation.nama_donatur) }}
+                    </div>
+                    <div>
+                      <div class="flex items-center space-x-2">
+                        <span class="font-bold text-[15px] text-white">{{ donation.nama_donatur }}</span>
+                        <span class="text-[#516382] text-[12px] hidden sm:inline">{{ donation.email_donatur || '' }}</span>
+                        <span class="px-2 py-0.5 rounded text-[11px] font-bold text-emerald-400 bg-emerald-500/10">
+                          +Rp {{ Number(donation.jumlah).toLocaleString('id-ID') }}
+                        </span>
+                      </div>
+                      <div class="text-[14px] text-[#94a3b8] mt-1 line-clamp-1">
+                        {{ donation.pesan || 'Tidak ada pesan' }}
+                      </div>
+                    </div>
                   </div>
-                  <div class="text-[14px] text-[#94a3b8] mt-1 line-clamp-1">Dijamin gacor www.maxwinnn.com</div>
-                </div>
-              </div>
-              <div class="flex flex-col items-end hidden sm:flex">
-                <span class="text-[11px] text-[#516382] mb-2 font-medium">15 menit lalu</span>
-                <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#4c1d2e] text-red-400 bg-[#2d121c] text-[11px] font-bold">
-                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                  <span>Difilter</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Divider -->
-            <div class="h-[1px] w-full bg-[#1c263e]"></div>
-
-            <!-- Item Requested 1: daffa@gmail.com -->
-            <div class="flex items-center justify-between p-4 rounded-2xl hover:bg-[#161d2d] transition-colors bg-[#1a111a]">
-              <div class="flex items-center space-x-4">
-                <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-[15px]" style="background-color: #ef4444;">DF</div>
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <span class="font-bold text-[15px] text-white">daapp</span>
-                    <span class="text-[#516382] text-[12px]">daffa@gmail.com</span>
-                    <span class="px-2 py-0.5 rounded text-[11px] font-bold text-emerald-400 bg-emerald-500/10">+Rp 500k</span>
+                  <div class="flex flex-col items-end hidden sm:flex shrink-0">
+                    <span class="text-[11px] text-[#516382] mb-2 font-medium">{{ timeAgo(donation.created_at) }}</span>
+                    <div v-if="donation.status === 'SUCCESS'" class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#043324] text-emerald-400 bg-[#071d16] text-[11px] font-bold">
+                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                      <span>Aman</span>
+                    </div>
+                    <div v-else-if="donation.status === 'FAILED'" class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#4c1d2e] text-red-400 bg-[#2d121c] text-[11px] font-bold">
+                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                      <span>Gagal / Difilter</span>
+                    </div>
+                    <div v-else-if="donation.status === 'PENDING'" class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#b45309] text-yellow-400 bg-[#451a03] text-[11px] font-bold">
+                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      <span>Pending</span>
+                    </div>
                   </div>
-                  <div class="text-[14px] text-[#94a3b8] mt-1 line-clamp-1">kantorbola gacorr!</div>
                 </div>
-              </div>
-              <div class="flex flex-col items-end hidden sm:flex">
-                <span class="text-[11px] text-[#516382] mb-2 font-medium">30 menit lalu</span>
-                <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#4c1d2e] text-red-400 bg-[#2d121c] text-[11px] font-bold">
-                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                  <span>Difilter</span>
-                </div>
-              </div>
-            </div>
 
-            <!-- Divider -->
-            <div class="h-[1px] w-full bg-[#1c263e]"></div>
-
-            <!-- Item Requested 2: irsyad@gmail.com -->
-            <div class="flex items-center justify-between p-4 rounded-2xl hover:bg-[#161d2d] transition-colors">
-              <div class="flex items-center space-x-4">
-                <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-[15px]" style="background-color: #8b5cf6;">IR</div>
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <span class="font-bold text-[15px] text-white">irsyadd</span>
-                    <span class="text-[#516382] text-[12px]">irsyad@gmail.com</span>
-                    <span class="px-2 py-0.5 rounded text-[11px] font-bold text-emerald-400 bg-emerald-500/10">+Rp 100k</span>
-                  </div>
-                  <div class="text-[14px] text-[#94a3b8] mt-1 line-clamp-1">kerenn banget konten nya bangg!</div>
-                </div>
-              </div>
-              <div class="flex flex-col items-end hidden sm:flex">
-                <span class="text-[11px] text-[#516382] mb-2 font-medium">1 jam lalu</span>
-                <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#043324] text-emerald-400 bg-[#071d16] text-[11px] font-bold">
-                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                  <span>Aman</span>
-                </div>
-              </div>
-            </div>
-
-             <!-- Divider -->
-            <div class="h-[1px] w-full bg-[#1c263e]"></div>
-
-            <!-- Item 3 -->
-            <div class="flex items-center justify-between p-4 rounded-2xl hover:bg-[#161d2d] transition-colors">
-              <div class="flex items-center space-x-4">
-                <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-[15px]" style="background-color: #0ea5e9;">NZ</div>
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <span class="font-bold text-[15px] text-white">Si Nitip</span>
-                    <span class="text-[#516382] text-[12px]">san@gmail.com</span>
-                    <span class="px-2 py-0.5 rounded text-[11px] font-bold text-emerald-400 bg-emerald-500/10">+Rp 30k</span>
-                  </div>
-                  <div class="text-[14px] text-[#94a3b8] mt-1 line-clamp-1">Konten terbaik di Indonesia! Semangat terus kak ✨</div>
-                </div>
-              </div>
-              <div class="flex flex-col items-end hidden sm:flex">
-                <span class="text-[11px] text-[#516382] mb-2 font-medium">1 jam lalu</span>
-                <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#043324] text-emerald-400 bg-[#071d16] text-[11px] font-bold">
-                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                  <span>Aman</span>
-                </div>
-              </div>
-            </div>
+                <!-- Divider -->
+                <div v-if="index !== donations.length - 1" class="h-[1px] w-full bg-[#1c263e]"></div>
+              </template>
+            </template>
 
           </div>
         </div>

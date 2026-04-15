@@ -10,6 +10,8 @@ import DashboardView from '../components/DashboardView.vue'
 import ProfileView from '../components/ProfileView.vue'
 import OverlayView from '../components/OverlayView.vue'
 import OnboardingUsernameStep from '../components/OnboardingUsernameStep.vue'
+import DonateView from '../components/DonateView.vue'
+import OverlayAlertRenderer from '../components/OverlayAlertRenderer.vue'
 
 const routes = [
   {
@@ -66,6 +68,19 @@ const routes = [
     component: OverlayView,
     meta: { requiresAuth: true }
   },
+  {
+    path: '/alert/:username',
+    name: 'alert',
+    component: OverlayAlertRenderer,
+    meta: { public: true }
+  },
+  // Halaman donasi publik (harus sebelum catch-all)
+  {
+    path: '/:username',
+    name: 'donate',
+    component: DonateView,
+    meta: { public: true }
+  },
   // Catch-all 404
   {
     path: '/:pathMatch(.*)*',
@@ -84,6 +99,11 @@ router.beforeEach((to, from, next) => {
   
   const loggedIn = isAuthenticated.value
   const hasUsername = !!user.value?.username
+
+  // Halaman publik (donasi) — bisa diakses siapa saja
+  if (to.meta.public) {
+    return next()
+  }
 
   if (to.meta.requiresAuth && !loggedIn) {
     // Mau masuk halaman terproteksi tapi belum login

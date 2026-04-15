@@ -6,7 +6,20 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import helmet from 'helmet';
 
 async function bootstrap() {
+  // ─── Validate Critical Environment Variables ───
+  const requiredEnvVars = ['JWT_SECRET', 'DATABASE_URL'];
+  for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+      console.error(`❌ FATAL: Environment variable ${envVar} is not set. Server cannot start.`);
+      process.exit(1);
+    }
+  }
+
   const app = await NestFactory.create(AppModule);
+  
+  // ─── Global API Prefix ───
+  app.setGlobalPrefix('api');
+
 
   // ─── CORS Configuration ───
   app.enableCors({
@@ -43,8 +56,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
-  console.log(`Server running on port ${process.env.PORT ?? 3000}`);
-  console.log(`Swagger docs: http://localhost:${process.env.PORT ?? 3000}/api/docs`);
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port, '0.0.0.0');
+  console.log(`Server running on port ${port}`);
+  console.log(`Swagger docs: http://localhost:${port}/api/docs`);
 }
 bootstrap();

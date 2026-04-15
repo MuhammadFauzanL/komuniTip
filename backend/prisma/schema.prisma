@@ -40,18 +40,27 @@ model User {
 }
 
 model Donation {
-  id                  String   @id @default(uuid())
+  id                  String    @id @default(uuid())
   streamerId          String
-  nama_donatur        String   @default("Anonim") @db.VarChar(100)
-  pesan               String?  @db.Text
-  jumlah              Decimal  @db.Decimal(15, 2)
-  status              String   @default("PENDING") @db.VarChar(20)
-  payment_gateway_ref String?  @unique
-  createdAt           DateTime @default(now())
+  nama_donatur        String    @default("Anonim") @db.VarChar(100)
+  email_donatur       String?   @db.VarChar(200)
+  pesan               String?   @db.Text
+  jumlah              Decimal   @db.Decimal(15, 2)
+  status              String    @default("PENDING") @db.VarChar(20)
+  payment_gateway_ref String?   @unique
+  payment_method      String?   @db.VarChar(50)
+  paid_at             DateTime?
 
-  streamer            User     @relation(fields: [streamerId], references: [id], onDelete: Cascade)
+  // AI Moderation fields
+  ai_status           String?   @db.VarChar(20)   // SAFE, BLOCKED
+  ai_reason           String?   @db.Text           // Alasan jika diblokir AI
+
+  createdAt           DateTime  @default(now())
+
+  streamer            User      @relation(fields: [streamerId], references: [id], onDelete: Cascade)
 
   @@index([streamerId])
+  @@index([status])
   @@map("donations")
 }
 
@@ -59,9 +68,16 @@ model OverlaySetting {
   id                  String   @id @default(uuid())
   streamerId          String   @unique
   min_donasi_alert    Decimal  @default(10000.00) @db.Decimal(15, 2)
-  
-  // PERSIAPAN FITUR: Filter Kata Kotor Mandiri Kreator 
-  //opsional
+  durasi_alert        Int      @default(8)
+  template_text       String   @default("{name} baru saja memberikan {amount}")
+  font_family         String   @default("Inter") @db.VarChar(50)
+  nama_color          String   @default("#FFFFFF") @db.VarChar(9)
+  template_color      String   @default("#2BBBA0") @db.VarChar(9)
+  amount_color        String   @default("#3BA2FF") @db.VarChar(9)
+  message_color       String   @default("#FF914D") @db.VarChar(9)
+  sound_enabled       Boolean  @default(true)
+  tts_enabled         Boolean  @default(false)
+  ai_filter_enabled   Boolean  @default(false)
   banned_words        String?  @db.Text
 
   streamer            User     @relation(fields: [streamerId], references: [id], onDelete: Cascade)
