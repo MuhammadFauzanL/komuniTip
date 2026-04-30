@@ -1,5 +1,5 @@
 import {
-  Controller, Post, Body, Headers, Param,
+  Controller, Get, Post, Body, Headers, Param,
   HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
@@ -10,6 +10,15 @@ import { PaymentService } from './payment.service';
 @Controller()
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
+
+  @Get('payment/status/:donationId')
+  @SkipThrottle()
+  @ApiOperation({ summary: 'Mengambil status pembayaran donasi untuk audit/redirect page' })
+  @ApiParam({ name: 'donationId', description: 'ID donasi internal KomuniTip' })
+  @ApiResponse({ status: 200, description: 'Status pembayaran berhasil diambil' })
+  async getDonationStatus(@Param('donationId') donationId: string) {
+    return this.paymentService.getDonationStatus(donationId);
+  }
 
   /**
    * Membuat invoice pembayaran untuk donasi yang sudah lolos AI moderation.

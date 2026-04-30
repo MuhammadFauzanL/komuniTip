@@ -8,6 +8,7 @@ import { MailModule } from './mail/mail.module';
 import { DonationModule } from './donation/donation.module';
 import { PaymentModule } from './payment/payment.module';
 import { SocketModule } from './socket/socket.module';
+import { OverlayModule } from './overlay/overlay.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -26,6 +27,7 @@ import { APP_GUARD } from '@nestjs/core';
     DonationModule,
     PaymentModule,
     SocketModule,
+    OverlayModule,
   ],
   controllers: [AppController],
   providers: [

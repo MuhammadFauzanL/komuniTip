@@ -2,9 +2,10 @@ import axios from 'axios'
 
 // ─── Centralized API Client ───
 // All HTTP calls go through this instance.
-// Base URL uses Vite proxy: /api/* → backend-api:3000/*
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -33,16 +34,21 @@ api.interceptors.response.use(
       localStorage.removeItem('user')
     }
 
-    // Extract readable error message from backend response
-    const message =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
+    const responseData = error.response?.data
+    const rawMessage =
+      responseData?.message ??
+      responseData?.reason ??
+      responseData?.error ??
       'Terjadi kesalahan. Silakan coba lagi.'
 
     // Normalize to single string (NestJS validation returns array of messages)
-    const errorMessage = Array.isArray(message) ? message[0] : message
+    const errorMessage = Array.isArray(rawMessage) ? rawMessage[0] : rawMessage
+    const normalizedError = new Error(errorMessage)
 
-    return Promise.reject(new Error(errorMessage))
+    normalizedError.status = error.response?.status
+    normalizedError.details = responseData
+
+    return Promise.reject(normalizedError)
   }
 )
 

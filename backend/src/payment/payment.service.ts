@@ -21,6 +21,67 @@ export class PaymentService {
     this.xenditClient = new Xendit({ secretKey: secretKey || '' });
   }
 
+  private buildDonationRedirectUrl(
+    username: string | null,
+    donationId: string,
+    outcome: 'success' | 'failed',
+  ) {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    if (!frontendUrl || !username) {
+      throw new BadRequestException('Konfigurasi redirect pembayaran belum lengkap.');
+    }
+
+    const redirectUrl = new URL(`/${username}`, frontendUrl);
+    redirectUrl.searchParams.set(outcome, 'true');
+    redirectUrl.searchParams.set('donation_id', donationId);
+
+    return redirectUrl.toString();
+  }
+
+  async getDonationStatus(donationId: string) {
+    const donation = await this.prisma.donation.findUnique({
+      where: { id: donationId },
+      select: {
+        id: true,
+        status: true,
+        jumlah: true,
+        nama_donatur: true,
+        pesan: true,
+        payment_method: true,
+        paid_at: true,
+        payment_gateway_ref: true,
+        ai_status: true,
+        ai_reason: true,
+        createdAt: true,
+        streamer: {
+          select: {
+            username: true,
+            nama_lengkap: true,
+          },
+        },
+      },
+    });
+
+    if (!donation) {
+      throw new BadRequestException('Donasi tidak ditemukan');
+    }
+
+    return {
+      donation_id: donation.id,
+      status: donation.status,
+      amount: Number(donation.jumlah),
+      donor_name: donation.nama_donatur,
+      message: donation.pesan,
+      payment_method: donation.payment_method,
+      paid_at: donation.paid_at,
+      payment_reference: donation.payment_gateway_ref,
+      ai_status: donation.ai_status,
+      ai_reason: donation.ai_reason,
+      created_at: donation.createdAt,
+      streamer: donation.streamer,
+    };
+  }
+
   /**
    * Membuat invoice Xendit untuk pembayaran donasi.
    * 
@@ -60,8 +121,16 @@ export class PaymentService {
             givenNames: donation.nama_donatur,
             email: donation.email_donatur || undefined,
           },
-          successRedirectUrl: `${this.configService.get('FRONTEND_URL')}/${donation.streamer.username}?success=true`,
-          failureRedirectUrl: `${this.configService.get('FRONTEND_URL')}/${donation.streamer.username}?failed=true`,
+          successRedirectUrl: this.buildDonationRedirectUrl(
+            donation.streamer.username,
+            donation.id,
+            'success',
+          ),
+          failureRedirectUrl: this.buildDonationRedirectUrl(
+            donation.streamer.username,
+            donation.id,
+            'failed',
+          ),
           items: [
             {
               name: `Donasi ke ${donation.streamer.nama_lengkap}`,
@@ -86,6 +155,7 @@ export class PaymentService {
 
       // 4. Return invoice URL
       return {
+        donation_id: donation.id,
         invoice_url: invoice.invoiceUrl,
         invoice_id: invoice.id,
         external_id: externalId,

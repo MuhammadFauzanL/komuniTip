@@ -15,6 +15,11 @@ const aiBlocked = ref(false)
 const blockReason = ref('')
 const success = ref(false)
 const errorMessage = ref('')
+const paymentNotice = ref('')
+const paymentSummary = ref(null)
+const paymentStatus = ref(null)
+
+const storageKey = `komunitip:last-donation:${username}`
 
 // ─── Form ───
 const form = ref({
@@ -36,8 +41,52 @@ const formatRupiah = (amount) => {
   }).format(amount)
 }
 
+const fetchPaymentStatus = async (donationId) => {
+  const { data } = await api.get(`/payment/status/${donationId}`)
+  paymentStatus.value = data.data
+  paymentSummary.value = {
+    nama_donatur: data.data.donor_name,
+    jumlah: data.data.amount,
+  }
+  sessionStorage.setItem(storageKey, JSON.stringify(paymentSummary.value))
+}
+
 // ─── Fetch Streamer Profile ───
 onMounted(async () => {
+  try {
+    const storedSummary = sessionStorage.getItem(storageKey)
+    paymentSummary.value = storedSummary ? JSON.parse(storedSummary) : null
+  } catch {
+    paymentSummary.value = null
+  }
+
+  const donationId = route.query.donation_id
+
+  if (route.query.success === 'true') {
+    paymentNotice.value = 'Pembayaran berhasil diterima. Donasi kamu sedang diverifikasi oleh sistem.'
+    success.value = true
+  } else if (route.query.failed === 'true') {
+    errorMessage.value = 'Pembayaran dibatalkan atau gagal diproses. Silakan coba lagi.'
+  }
+
+  if (donationId) {
+    try {
+      await fetchPaymentStatus(donationId)
+      if (paymentStatus.value?.status === 'SUCCESS') {
+        paymentNotice.value = 'Pembayaran berhasil diverifikasi. Alert akan dikirim ke overlay streamer.'
+        success.value = true
+      } else if (paymentStatus.value?.status === 'PENDING') {
+        paymentNotice.value = 'Pembayaran sudah diterima, menunggu verifikasi webhook.'
+        success.value = true
+      } else if (paymentStatus.value?.status === 'FAILED') {
+        success.value = false
+        errorMessage.value = 'Pembayaran gagal atau sudah kedaluwarsa. Silakan coba lagi.'
+      }
+    } catch (error) {
+      errorMessage.value = error.message || 'Gagal memeriksa status pembayaran.'
+    }
+  }
+
   try {
     const { data } = await api.get(`/donate/${username}`)
     streamer.value = data.data
@@ -56,52 +105,32 @@ const submitDonation = async () => {
   success.value = false
 
   try {
-    // Step 1: Submit donasi + AI check
-    const response = await fetch(`/api/donate/${username}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nama_donatur: form.value.nama_donatur,
-        email_donatur: form.value.email_donatur || undefined,
-        pesan: form.value.pesan || undefined,
-        jumlah: form.value.jumlah,
-      }),
+    const { data } = await api.post(`/donate/${username}`, {
+      nama_donatur: form.value.nama_donatur,
+      email_donatur: form.value.email_donatur || undefined,
+      pesan: form.value.pesan || undefined,
+      jumlah: form.value.jumlah,
     })
 
-    const data = await response.json()
+    const checkoutUrl = data.data?.payment?.invoice_url
+    if (!checkoutUrl) {
+      throw new Error('Checkout pembayaran belum tersedia. Silakan coba lagi.')
+    }
 
-    if (!response.ok) {
-      if (data?.blocked) {
-        aiBlocked.value = true
-        blockReason.value = data.reason || 'Pesan mengandung konten yang tidak diizinkan.'
-      } else {
-        const msg = Array.isArray(data?.message) ? data.message[0] : data?.message
-        errorMessage.value = msg || 'Terjadi kesalahan. Silakan coba lagi.'
-      }
+    paymentSummary.value = {
+      nama_donatur: form.value.nama_donatur,
+      jumlah: form.value.jumlah,
+    }
+    sessionStorage.setItem(storageKey, JSON.stringify(paymentSummary.value))
+    window.location.href = checkoutUrl
+  } catch (err) {
+    if (err.details?.blocked) {
+      aiBlocked.value = true
+      blockReason.value = err.details.reason || 'Pesan mengandung konten yang tidak diizinkan.'
       return
     }
 
-    // Step 2: Buat invoice Xendit
-    const donationId = data.data?.donation_id
-    if (donationId) {
-      const invoiceRes = await fetch(`/api/payment/create-invoice/${donationId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-
-      const invoiceData = await invoiceRes.json()
-
-      if (invoiceRes.ok && invoiceData.data?.invoice_url) {
-        // Redirect ke halaman pembayaran Xendit
-        window.location.href = invoiceData.data.invoice_url
-        return
-      }
-    }
-
-    // Fallback: jika invoice gagal, tampilkan sukses biasa
-    success.value = true
-  } catch (err) {
-    errorMessage.value = 'Gagal menghubungi server. Silakan coba lagi.'
+    errorMessage.value = err.message || 'Gagal menghubungi server. Silakan coba lagi.'
   } finally {
     submitting.value = false
   }
@@ -113,6 +142,10 @@ const resetForm = () => {
   aiBlocked.value = false
   success.value = false
   errorMessage.value = ''
+  paymentNotice.value = ''
+  paymentSummary.value = null
+  paymentStatus.value = null
+  sessionStorage.removeItem(storageKey)
 }
 
 // ─── Computed ───
@@ -169,10 +202,14 @@ const isFormValid = computed(() => {
       <!-- Success State -->
       <div v-if="success" class="success-card">
         <div class="success-icon">🎉</div>
-        <h2>Donasi Terkirim!</h2>
-        <p>Terima kasih <strong>{{ form.nama_donatur }}</strong>!</p>
-        <p>Donasi sebesar <strong>{{ formatRupiah(form.jumlah) }}</strong> sedang diproses.</p>
-        <p class="success-note">Setelah integrasi pembayaran, kamu akan diarahkan ke halaman pembayaran.</p>
+        <h2>Pembayaran Diterima!</h2>
+        <p v-if="paymentSummary?.nama_donatur">Terima kasih <strong>{{ paymentSummary.nama_donatur }}</strong>!</p>
+        <p v-if="paymentSummary?.jumlah">Donasi sebesar <strong>{{ formatRupiah(paymentSummary.jumlah) }}</strong> sedang diproses.</p>
+        <p v-else>Donasi kamu sedang diproses.</p>
+        <p class="success-note">{{ paymentNotice || 'Donasi kamu sedang diverifikasi oleh sistem.' }}</p>
+        <p v-if="paymentStatus?.payment_method" class="success-note">
+          Metode pembayaran: <strong>{{ paymentStatus.payment_method }}</strong>
+        </p>
         <button @click="resetForm" class="btn-primary">Kirim Donasi Lagi</button>
       </div>
 

@@ -1,7 +1,9 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { io } from 'socket.io-client'
+import AlertBackground from '../assets/Icon_kotak.png'
+import api from '../services/api'
 
 const route = useRoute()
 const username = route.params.username
@@ -11,18 +13,32 @@ const socket = ref(null)
 const overlayQueue = ref([])
 const currentAlert = ref(null)
 const isPlaying = ref(false)
+const overlaySettings = ref({
+  min_donasi_alert: 10000,
+  durasi_alert: 8,
+  template_text: '{name} baru saja memberikan {amount}',
+  font_family: 'Inter',
+  nama_color: '#FFFFFF',
+  template_color: '#2BBBA0',
+  amount_color: '#3BA2FF',
+  message_color: '#FF914D',
+  sound_enabled: true,
+  sound_min_donasi: 200000,
+  tts_enabled: false,
+})
 
 // Pengaturan Overlay (Nanti bisa di-fetch dari API OverlaySettings, 
 // sementara kita hardcode untuk demo mengikuti UI dari dashboard)
-const soundUrl = '/notification.mp3' // pastikan punya aset ini, atau abaikan
-const displayDuration = 8000 // 8 detik
-const minTTS = 10000
+const alertBoxStyle = {
+  backgroundImage: `url(${AlertBackground})`,
+}
+const socketServerUrl =
+  import.meta.env.VITE_SOCKET_URL ||
+  (window.location.hostname === 'localhost' ? 'http://localhost:3000' : undefined)
 
 onMounted(() => {
-  // Connect to generic backend URL. Vite proxy will NOT proxy WebSockets automatically
-  // unless configured. It's safer to connect directly to the backend URL on port 3000
-  // Note: For localhost demo, backend is at port 3000. 
-  socket.value = io(window.location.hostname === 'localhost' ? 'http://localhost:3000' : '/')
+  loadOverlaySettings()
+  socket.value = socketServerUrl ? io(socketServerUrl) : io()
 
   socket.value.on('connect', () => {
     console.log('🔗 WebSocket Connected to alert server')
@@ -32,6 +48,9 @@ onMounted(() => {
 
   socket.value.on('new_donation', (data) => {
     console.log('🎉 New Donation Received:', data)
+    if (Number(data.jumlah) < Number(overlaySettings.value.min_donasi_alert)) {
+      return
+    }
     overlayQueue.value.push(data)
     processQueue()
   })
@@ -40,6 +59,21 @@ onMounted(() => {
     console.log('❌ WebSocket Disconnected')
   })
 })
+
+const loadOverlaySettings = async () => {
+  try {
+    const { data } = await api.get(`/overlay/public/${username}`)
+    overlaySettings.value = {
+      ...overlaySettings.value,
+      ...data.data.settings,
+      min_donasi_alert: Number(data.data.settings.min_donasi_alert),
+      durasi_alert: Number(data.data.settings.durasi_alert),
+      sound_min_donasi: Number(data.data.settings.sound_min_donasi),
+    }
+  } catch (error) {
+    console.error('Gagal memuat overlay settings:', error)
+  }
+}
 
 onUnmounted(() => {
   if (socket.value) {
@@ -61,15 +95,10 @@ const playAlert = (alertData) => {
   isPlaying.value = true
   currentAlert.value = alertData
 
-  // Putar Suara (bisa gagal jika browser memblokir auto-play tanpa interaksi, 
-  // tapi biasanya lolos jika dari OBS browser source)
-  try {
-    const audio = new Audio(soundUrl)
-    audio.play().catch(e => console.log('Audio autoplay prevented by browser'))
-  } catch (e) {}
+  playSoundIfEligible(alertData.jumlah)
 
   // TTS
-  if (alertData.jumlah >= minTTS && 'speechSynthesis' in window) {
+  if (overlaySettings.value.tts_enabled && 'speechSynthesis' in window) {
     const textToSpeech = `Terima kasih ${alertData.nama_donatur} atas dukungannya sebesar ${alertData.jumlah} rupiah. ${alertData.pesan || ''}`
     const utterance = new SpeechSynthesisUtterance(textToSpeech)
     utterance.lang = 'id-ID' // Bahasa Indonesia
@@ -85,7 +114,60 @@ const playAlert = (alertData) => {
     
     // Beri jeda 1 detik sebelum memainkan alert berikutnya
     setTimeout(processQueue, 1000)
-  }, displayDuration)
+  }, overlaySettings.value.durasi_alert * 1000)
+}
+
+const playSoundIfEligible = (amount) => {
+  const meetsThreshold =
+    overlaySettings.value.sound_enabled &&
+    Number(amount) >= Number(overlaySettings.value.sound_min_donasi)
+
+  if (!meetsThreshold) {
+    return
+  }
+
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext
+    if (!AudioContextClass) {
+      return
+    }
+
+    const context = new AudioContextClass()
+    const masterGain = context.createGain()
+    masterGain.gain.setValueAtTime(0.0001, context.currentTime)
+    masterGain.connect(context.destination)
+
+    const melody = [
+      { frequency: 659.25, duration: 0.12, delay: 0.0 },
+      { frequency: 783.99, duration: 0.14, delay: 0.14 },
+      { frequency: 987.77, duration: 0.24, delay: 0.30 },
+    ]
+
+    melody.forEach((note) => {
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      const startAt = context.currentTime + note.delay
+      const endAt = startAt + note.duration
+
+      oscillator.type = 'triangle'
+      oscillator.frequency.setValueAtTime(note.frequency, startAt)
+      gain.gain.setValueAtTime(0.0001, startAt)
+      gain.gain.exponentialRampToValueAtTime(0.18, startAt + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.0001, endAt)
+
+      oscillator.connect(gain)
+      gain.connect(masterGain)
+      oscillator.start(startAt)
+      oscillator.stop(endAt + 0.02)
+    })
+
+    const totalDuration = melody.at(-1).delay + melody.at(-1).duration + 0.1
+    setTimeout(() => {
+      context.close().catch(() => {})
+    }, totalDuration * 1000)
+  } catch (error) {
+    console.log('Generated sound alert failed:', error)
+  }
 }
 
 const formatRupiah = (angka) => {
@@ -95,24 +177,52 @@ const formatRupiah = (angka) => {
     minimumFractionDigits: 0
   }).format(angka)
 }
+
+const escapeHtml = (value) =>
+  String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+
+const formattedHeader = computed(() => {
+  if (!currentAlert.value) return ''
+
+  return escapeHtml(overlaySettings.value.template_text)
+    .replace(
+      '{name}',
+      `<span style="color:${overlaySettings.value.nama_color}">${escapeHtml(currentAlert.value.nama_donatur)}</span>`,
+    )
+    .replace(
+      '{amount}',
+      `<span style="color:${overlaySettings.value.amount_color}">${escapeHtml(formatRupiah(currentAlert.value.jumlah))}</span>`,
+    )
+})
 </script>
 
 <template>
   <div class="overlay-container">
     <Transition name="bounce">
-      <div v-if="currentAlert" class="alert-box">
+      <div v-if="currentAlert" class="alert-box" :style="alertBoxStyle">
         <!-- Menggunakan animasi mascot dan template yang mirip dari Dashboard -->
         <div class="alert-content">
-          <div class="header">
-            <span class="donator-name">{{ currentAlert.nama_donatur }}</span> 
-            <span class="static-text">baru saja memberikan</span>
+          <div
+            class="header template-text"
+            :style="{ color: overlaySettings.template_color, fontFamily: overlaySettings.font_family }"
+            v-html="formattedHeader"
+          >
           </div>
           
-          <div class="amount">
+          <div class="amount" :style="{ color: overlaySettings.amount_color, fontFamily: overlaySettings.font_family }">
             {{ formatRupiah(currentAlert.jumlah) }}
           </div>
           
-          <div v-if="currentAlert.pesan" class="message">
+          <div
+            v-if="currentAlert.pesan"
+            class="message"
+            :style="{ color: overlaySettings.message_color, fontFamily: overlaySettings.font_family }"
+          >
             "{{ currentAlert.pesan }}"
           </div>
         </div>
@@ -137,7 +247,6 @@ const formatRupiah = (angka) => {
 .alert-box {
   width: 600px;
   aspect-ratio: 2.8 / 1;
-  background-image: url('../assets/Icon_kotak.png'); /* Placeholder, sesuaikan dengan aset jika ada */
   background-size: cover;
   background-position: center;
   background-color: #050810;
@@ -167,35 +276,22 @@ const formatRupiah = (angka) => {
 }
 
 .header {
-  font-family: 'Inter', sans-serif;
   font-weight: 900;
   font-size: 24px;
   text-shadow: 0 4px 8px rgba(0,0,0,0.5);
   margin-bottom: 8px;
 }
 
-.donator-name {
-  color: #FFFFFF;
-}
-
-.static-text {
-  color: #10B981; /* Emerald 400 */
-}
-
 .amount {
-  font-family: 'Inter', sans-serif;
   font-weight: 800;
   font-size: 48px;
-  color: #3BA2FF;
   text-shadow: 0 4px 12px rgba(0,0,0,0.5);
   margin: 12px 0;
 }
 
 .message {
-  font-family: 'Inter', sans-serif;
   font-weight: 700;
   font-size: 20px;
-  color: #FF914D; /* Orange 400 */
   text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 

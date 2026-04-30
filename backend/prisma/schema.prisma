@@ -76,6 +76,7 @@ model OverlaySetting {
   amount_color        String   @default("#3BA2FF") @db.VarChar(9)
   message_color       String   @default("#FF914D") @db.VarChar(9)
   sound_enabled       Boolean  @default(true)
+  sound_min_donasi    Decimal  @default(200000.00) @db.Decimal(15, 2)
   tts_enabled         Boolean  @default(false)
   ai_filter_enabled   Boolean  @default(false)
   banned_words        String?  @db.Text

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, Logger } from '@nes
 import { PrismaService } from '../prisma/prisma.service';
 import { AiModerationService } from '../ai/ai-moderation.service';
 import { CreateDonationDto } from './dto/create-donation.dto';
+import { PaymentService } from '../payment/payment.service';
 
 @Injectable()
 export class DonationService {
@@ -10,6 +11,7 @@ export class DonationService {
   constructor(
     private prisma: PrismaService,
     private aiModeration: AiModerationService,
+    private paymentService: PaymentService,
   ) {}
 
   /**
@@ -47,7 +49,8 @@ export class DonationService {
    * 2. Jalankan AI Moderation pada nama + pesan
    * 3. Jika BLOCKED → simpan record dengan status BLOCKED, return error
    * 4. Jika SAFE → simpan record dengan status PENDING
-   * 5. Return donation data (nanti akan ditambahkan payment URL setelah Xendit terintegrasi)
+   * 5. Buat invoice pembayaran
+   * 6. Return data checkout untuk frontend
    * 
    * Best Practice:
    * - Pre-payment validation (AI check SEBELUM bayar)
@@ -114,15 +117,24 @@ export class DonationService {
       },
     });
 
-    // 5. Return donation data
-    // Nanti di Step 4, kita akan menambahkan payment_url dari Xendit di sini
+    let invoice;
+    try {
+      invoice = await this.paymentService.createInvoice(donation.id);
+    } catch (error) {
+      this.logger.error(
+        `❌ Failed to create invoice for donation ${donation.id}: ${error.message}`,
+      );
+      throw error;
+    }
+
+    // 5. Return donation + checkout data
     return {
       donation_id: donation.id,
       streamer_name: streamer.nama_lengkap,
-      jumlah: donation.jumlah,
+      jumlah: Number(donation.jumlah),
       status: donation.status,
+      payment: invoice,
       message: 'Donasi berhasil divalidasi. Silakan lanjutkan ke pembayaran.',
-      // payment_url akan ditambahkan setelah integrasi Xendit (Step 4)
     };
   }
 
