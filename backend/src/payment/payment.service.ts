@@ -3,6 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { DonationGateway } from '../socket/donation.gateway';
 import Xendit from 'xendit-node';
+import { DonationAlertPayload } from '../socket/socket.types';
+
+type WebhookStatus = 'PAID' | 'EXPIRED';
+type NormalizedWebhookPayload = {
+  externalId: string;
+  status: WebhookStatus;
+  paymentMethod: string | null;
+  paidAmount: number | null;
+};
 
 @Injectable()
 export class PaymentService {
@@ -19,6 +28,67 @@ export class PaymentService {
       this.logger.warn('XENDIT_SECRET_KEY not set. Payment will not work.');
     }
     this.xenditClient = new Xendit({ secretKey: secretKey || '' });
+  }
+
+  private buildDonationRedirectUrl(
+    username: string | null,
+    donationId: string,
+    outcome: 'success' | 'failed',
+  ) {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    if (!frontendUrl || !username) {
+      throw new BadRequestException('Konfigurasi redirect pembayaran belum lengkap.');
+    }
+
+    const redirectUrl = new URL(`/${username}`, frontendUrl);
+    redirectUrl.searchParams.set(outcome, 'true');
+    redirectUrl.searchParams.set('donation_id', donationId);
+
+    return redirectUrl.toString();
+  }
+
+  async getDonationStatus(donationId: string) {
+    const donation = await this.prisma.donation.findUnique({
+      where: { id: donationId },
+      select: {
+        id: true,
+        status: true,
+        jumlah: true,
+        nama_donatur: true,
+        pesan: true,
+        payment_method: true,
+        paid_at: true,
+        payment_gateway_ref: true,
+        ai_status: true,
+        ai_reason: true,
+        createdAt: true,
+        streamer: {
+          select: {
+            username: true,
+            nama_lengkap: true,
+          },
+        },
+      },
+    });
+
+    if (!donation) {
+      throw new BadRequestException('Donasi tidak ditemukan');
+    }
+
+    return {
+      donation_id: donation.id,
+      status: donation.status,
+      amount: Number(donation.jumlah),
+      donor_name: donation.nama_donatur,
+      message: donation.pesan,
+      payment_method: donation.payment_method,
+      paid_at: donation.paid_at,
+      payment_reference: donation.payment_gateway_ref,
+      ai_status: donation.ai_status,
+      ai_reason: donation.ai_reason,
+      created_at: donation.createdAt,
+      streamer: donation.streamer,
+    };
   }
 
   /**
@@ -60,8 +130,16 @@ export class PaymentService {
             givenNames: donation.nama_donatur,
             email: donation.email_donatur || undefined,
           },
-          successRedirectUrl: `${this.configService.get('FRONTEND_URL')}/${donation.streamer.username}?success=true`,
-          failureRedirectUrl: `${this.configService.get('FRONTEND_URL')}/${donation.streamer.username}?failed=true`,
+          successRedirectUrl: this.buildDonationRedirectUrl(
+            donation.streamer.username,
+            donation.id,
+            'success',
+          ),
+          failureRedirectUrl: this.buildDonationRedirectUrl(
+            donation.streamer.username,
+            donation.id,
+            'failed',
+          ),
           items: [
             {
               name: `Donasi ke ${donation.streamer.nama_lengkap}`,
@@ -86,6 +164,7 @@ export class PaymentService {
 
       // 4. Return invoice URL
       return {
+        donation_id: donation.id,
         invoice_url: invoice.invoiceUrl,
         invoice_id: invoice.id,
         external_id: externalId,
@@ -118,20 +197,21 @@ export class PaymentService {
       throw new BadRequestException('Invalid webhook token');
     }
 
-    const { external_id, status, payment_method, paid_amount } = payload;
+    const normalizedPayload = this.normalizeWebhookPayload(payload);
+    const { externalId, status, paymentMethod, paidAmount } = normalizedPayload;
 
     this.logger.log(
-      `📩 Webhook received: external_id=${external_id}, status=${status}`,
+      `📩 Webhook received: external_id=${externalId}, status=${status}`,
     );
 
     // 2. Cari donasi
     const donation = await this.prisma.donation.findUnique({
-      where: { payment_gateway_ref: external_id },
+      where: { payment_gateway_ref: externalId },
       include: { streamer: { select: { username: true } } },
     });
 
     if (!donation) {
-      this.logger.warn(`Donation not found for external_id: ${external_id}`);
+      this.logger.warn(`Donation not found for external_id: ${externalId}`);
       return { status: 'IGNORED', message: 'Donation not found' };
     }
 
@@ -143,23 +223,59 @@ export class PaymentService {
 
     // 3. Handle status
     if (status === 'PAID') {
-      // Atomic transaction: update donasi + tambah saldo streamer
-      await this.prisma.$transaction([
-        this.prisma.donation.update({
+      const expectedAmount = Number(donation.jumlah);
+      if (paidAmount !== null && paidAmount !== expectedAmount) {
+        await this.prisma.donation.update({
           where: { id: donation.id },
           data: {
-            status: 'SUCCESS',
-            payment_method: payment_method || 'UNKNOWN',
-            paid_at: new Date(),
+            status: 'FAILED',
+            payment_method: paymentMethod || 'UNKNOWN',
           },
-        }),
-        this.prisma.user.update({
+        });
+
+        this.logger.error(
+          `Webhook amount mismatch for donation ${donation.id}: expected=${expectedAmount}, paid=${paidAmount}`,
+        );
+        return {
+          status: 'PAYMENT_MISMATCH',
+          donation_id: donation.id,
+        };
+      }
+
+      const paidAt = new Date();
+      const transactionResult = await this.prisma.$transaction(async (tx) => {
+        const donationUpdate = await tx.donation.updateMany({
+          where: {
+            id: donation.id,
+            status: {
+              not: 'SUCCESS',
+            },
+          },
+          data: {
+            status: 'SUCCESS',
+            payment_method: paymentMethod || 'UNKNOWN',
+            paid_at: paidAt,
+          },
+        });
+
+        if (donationUpdate.count === 0) {
+          return { alreadyProcessed: true };
+        }
+
+        await tx.user.update({
           where: { id: donation.streamerId },
           data: {
-            saldo_aktif: { increment: paid_amount || Number(donation.jumlah) },
+            saldo_aktif: { increment: expectedAmount },
           },
-        }),
-      ]);
+        });
+
+        return { alreadyProcessed: false };
+      });
+
+      if (transactionResult.alreadyProcessed) {
+        this.logger.log(`Donation ${donation.id} already SUCCESS during transaction, skipping.`);
+        return { status: 'ALREADY_PROCESSED' };
+      }
 
       this.logger.log(
         `✅ Donation ${donation.id} SUCCESS! Rp ${donation.jumlah} added to streamer saldo.`,
@@ -169,12 +285,15 @@ export class PaymentService {
       try {
         const username = donation.streamer?.username;
         if (username) {
-          this.donationGateway.emitDonationAlert(username, {
+          const alertPayload: DonationAlertPayload = {
             donation_id: donation.id,
             nama_donatur: donation.nama_donatur,
-            jumlah: Number(donation.jumlah),
+            jumlah: expectedAmount,
             pesan: donation.pesan,
-          });
+            paid_at: paidAt.toISOString(),
+            source: 'payment',
+          };
+          this.donationGateway.emitDonationAlert(username, alertPayload);
         }
       } catch (err) {
         this.logger.error(`Failed to emit socket alert: ${err.message}`);
@@ -184,15 +303,48 @@ export class PaymentService {
     }
 
     if (status === 'EXPIRED') {
-      await this.prisma.donation.update({
-        where: { id: donation.id },
-        data: { status: 'FAILED' },
-      });
+      if (donation.status === 'PENDING') {
+        await this.prisma.donation.update({
+          where: { id: donation.id },
+          data: { status: 'FAILED' },
+        });
+      }
 
       this.logger.log(`❌ Donation ${donation.id} EXPIRED.`);
       return { status: 'EXPIRED', donation_id: donation.id };
     }
 
     return { status: 'IGNORED', message: `Unknown status: ${status}` };
+  }
+
+  private normalizeWebhookPayload(payload: any): NormalizedWebhookPayload {
+    const externalId = payload?.external_id;
+    const status = payload?.status;
+    const paymentMethod = typeof payload?.payment_method === 'string'
+      ? payload.payment_method
+      : null;
+    const paidAmount =
+      payload?.paid_amount === undefined || payload?.paid_amount === null
+        ? null
+        : Number(payload.paid_amount);
+
+    if (typeof externalId !== 'string' || externalId.trim().length === 0) {
+      throw new BadRequestException('Invalid webhook payload: external_id is required');
+    }
+
+    if (status !== 'PAID' && status !== 'EXPIRED') {
+      throw new BadRequestException('Invalid webhook payload: unsupported status');
+    }
+
+    if (paidAmount !== null && Number.isNaN(paidAmount)) {
+      throw new BadRequestException('Invalid webhook payload: paid_amount must be numeric');
+    }
+
+    return {
+      externalId,
+      status,
+      paymentMethod,
+      paidAmount,
+    };
   }
 }

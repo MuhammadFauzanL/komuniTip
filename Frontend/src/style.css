@@ -10,6 +10,14 @@
   --color-border: #2a2f42;
 }
 
+@utility scrollbar-hide {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 body {
   @apply bg-bg-dark text-white font-sans antialiased;
 }

@@ -1,10 +1,16 @@
 import axios from 'axios'
+import { appConfig } from '../config/app-config'
+
+let unauthorizedHandler = () => {}
+
+export function registerUnauthorizedHandler(handler) {
+  unauthorizedHandler = typeof handler === 'function' ? handler : () => {}
+}
 
 // ─── Centralized API Client ───
 // All HTTP calls go through this instance.
-// Base URL uses Vite proxy: /api/* → backend-api:3000/*
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: appConfig.apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -31,18 +37,24 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('user')
+      unauthorizedHandler()
     }
 
-    // Extract readable error message from backend response
-    const message =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
+    const responseData = error.response?.data
+    const rawMessage =
+      responseData?.message ??
+      responseData?.reason ??
+      responseData?.error ??
       'Terjadi kesalahan. Silakan coba lagi.'
 
     // Normalize to single string (NestJS validation returns array of messages)
-    const errorMessage = Array.isArray(message) ? message[0] : message
+    const errorMessage = Array.isArray(rawMessage) ? rawMessage[0] : rawMessage
+    const normalizedError = new Error(errorMessage)
 
-    return Promise.reject(new Error(errorMessage))
+    normalizedError.status = error.response?.status
+    normalizedError.details = responseData
+
+    return Promise.reject(normalizedError)
   }
 )
 

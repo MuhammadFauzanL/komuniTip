@@ -19,6 +19,7 @@ model User {
   provider            String    @default("google") // 'local' atau 'google'
   google_id           String?   @unique
   saldo_aktif         Decimal   @default(0.00) @db.Decimal(15, 2)
+  saldo_tertahan      Decimal   @default(0.00) @db.Decimal(15, 2)
   role                UserRole  @default(BASIC)
   kategori            String?   @db.VarChar(50)
   bio                 String?   @db.Text
@@ -35,8 +36,45 @@ model User {
 
   donations           Donation[]
   overlay             OverlaySetting?
+  withdrawals         Withdrawal[]
 
   @@map("users")
+}
+
+model Withdrawal {
+  id                String           @id @default(uuid())
+  streamerId        String
+  amount            Decimal          @db.Decimal(15, 2)
+  bank_name         String           @db.VarChar(100)
+  account_name      String           @db.VarChar(150)
+  account_number    String           @db.VarChar(50)
+  notes             String?          @db.Text
+  status            WithdrawalStatus @default(PENDING)
+  processed_at      DateTime?
+  cancelled_at      DateTime?
+  failure_reason    String?          @db.Text
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  streamer          User             @relation(fields: [streamerId], references: [id], onDelete: Cascade)
+
+  @@index([streamerId, status])
+  @@map("withdrawals")
+}
+
+model LoginAttempt {
+  id             String   @id @default(uuid())
+  identifier     String   @db.VarChar(255)
+  client_ip      String   @db.VarChar(64)
+  failed_attempts Int     @default(0)
+  locked_until   DateTime?
+  last_attempt_at DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([identifier, client_ip])
+  @@index([locked_until])
+  @@map("login_attempts")
 }
 
 model Donation {
@@ -76,6 +114,7 @@ model OverlaySetting {
   amount_color        String   @default("#3BA2FF") @db.VarChar(9)
   message_color       String   @default("#FF914D") @db.VarChar(9)
   sound_enabled       Boolean  @default(true)
+  sound_min_donasi    Decimal  @default(200000.00) @db.Decimal(15, 2)
   tts_enabled         Boolean  @default(false)
   ai_filter_enabled   Boolean  @default(false)
   banned_words        String?  @db.Text
@@ -89,4 +128,12 @@ model OverlaySetting {
 enum UserRole {
   ADMIN
   BASIC
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  CANCELLED
 }

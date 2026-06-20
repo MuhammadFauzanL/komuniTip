@@ -15,8 +15,8 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Testing Backend KomunitiTrip"', () => {
-      expect(appController.getHello()).toBe('Testing Backend KomunitiTrip');
+    it('should return the current API contract greeting', () => {
+      expect(appController.getHello()).toBe('Welcome to Komunitip API Contract');
     });
   });
 });

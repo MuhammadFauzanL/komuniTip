@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import StandingMascot from '../assets/Image_(Cowboy Mascot).png'
@@ -12,19 +12,42 @@ import IconCoin from '../assets/Icon_coin.png'
 import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
-import { onMounted } from 'vue'
 import api from '../services/api'
 
-const emit = defineEmits([]) 
 const router = useRouter()
 const { user, logout, fetchMyProfile } = useAuth() 
 
 const donations = ref([])
+const stats = ref({
+  total_donasi_sukses: 0,
+  total_pendapatan: 0,
+  total_diblokir_ai: 0,
+})
 const loading = ref(true)
+const activeFeed = ref('all')
+const dashboardError = ref('')
+const walletSection = ref(null)
+const withdrawals = ref([])
+const withdrawalLoading = ref(false)
+const withdrawalSubmitting = ref(false)
+const withdrawalCancelingId = ref('')
+const withdrawalError = ref('')
+const withdrawalSuccess = ref('')
+const withdrawalForm = ref({
+  amount: 50000,
+  bank_name: '',
+  account_name: '',
+  account_number: '',
+  notes: '',
+})
+const PENDING_DONATION_REFRESH_INTERVAL_MS = 5000
+let pendingDonationRefreshIntervalId = null
 
 onMounted(async () => {
   await fetchMyProfile()
-  await fetchDonations()
+  await Promise.all([fetchDonations(), fetchStats(), fetchWithdrawals()])
+  resetWithdrawalForm()
+  syncPendingDonationRefresh()
 })
 
 const fetchDonations = async () => {
@@ -33,9 +56,18 @@ const fetchDonations = async () => {
     const response = await api.get('/donation/my')
     donations.value = response.data.data.donations || []
   } catch (error) {
-    console.error('Failed to fetch donations:', error)
+    dashboardError.value = error.message || 'Gagal memuat riwayat dukungan.'
   } finally {
     loading.value = false
+  }
+}
+
+const fetchStats = async () => {
+  try {
+    const response = await api.get('/donation/stats')
+    stats.value = response.data.data
+  } catch (error) {
+    dashboardError.value = error.message || 'Gagal memuat statistik donasi.'
   }
 }
 
@@ -58,9 +90,16 @@ const handleGoToDashboard = () => {
   router.push('/dashboard')
 }
 
+const handleGoToWallet = () => {
+  walletSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 const handleGoToOverlay = () => {
   router.push('/overlay')
 }
+
+const formatCurrency = (amount) =>
+  `Rp${Number(amount || 0).toLocaleString('id-ID')}`
 
 // Format Time Ago
 const timeAgo = (dateStr) => {
@@ -92,6 +131,162 @@ const getAvatarColor = (str) => {
   }
   return colors[Math.abs(hash) % colors.length]
 }
+
+const donationFeedTabs = [
+  { id: 'all', label: 'Semua Aktivitas' },
+  { id: 'success', label: 'Donasi Sukses' },
+  { id: 'blocked', label: 'Moderasi AI' },
+  { id: 'pending', label: 'Menunggu Bayar' },
+]
+
+const filteredDonations = computed(() => {
+  if (activeFeed.value === 'success') {
+    return donations.value.filter((donation) => donation.status === 'SUCCESS')
+  }
+
+  if (activeFeed.value === 'blocked') {
+    return donations.value.filter((donation) => donation.ai_status === 'BLOCKED')
+  }
+
+  if (activeFeed.value === 'pending') {
+    return donations.value.filter((donation) => donation.status === 'PENDING')
+  }
+
+  return donations.value
+})
+
+const blockedDonations = computed(() =>
+  donations.value.filter((donation) => donation.ai_status === 'BLOCKED'),
+)
+
+const pendingDonations = computed(() =>
+  donations.value.filter((donation) => donation.status === 'PENDING'),
+)
+
+const availableBalance = computed(() => Number(user.value?.saldo_aktif || 0))
+const heldBalance = computed(() => Number(user.value?.saldo_tertahan || 0))
+const canSubmitWithdrawal = computed(
+  () =>
+    availableBalance.value >= 50000 &&
+    withdrawalForm.value.amount >= 50000 &&
+    withdrawalForm.value.bank_name.trim().length > 0 &&
+    withdrawalForm.value.account_name.trim().length > 0 &&
+    withdrawalForm.value.account_number.trim().length > 0 &&
+    !withdrawalSubmitting.value,
+)
+
+const fetchWithdrawals = async () => {
+  try {
+    withdrawalLoading.value = true
+    const response = await api.get('/withdrawals/my')
+    const payload = response.data.data
+    withdrawals.value = payload.withdrawals || []
+  } catch (error) {
+    withdrawalError.value = error.message || 'Gagal memuat data withdraw.'
+  } finally {
+    withdrawalLoading.value = false
+  }
+}
+
+const stopPendingDonationRefresh = () => {
+  if (pendingDonationRefreshIntervalId) {
+    clearInterval(pendingDonationRefreshIntervalId)
+    pendingDonationRefreshIntervalId = null
+  }
+}
+
+const syncPendingDonationRefresh = () => {
+  stopPendingDonationRefresh()
+
+  if (pendingDonations.value.length === 0) {
+    return
+  }
+
+  pendingDonationRefreshIntervalId = window.setInterval(async () => {
+    try {
+      await Promise.all([fetchDonations(), fetchStats(), fetchMyProfile()])
+    } catch {
+      // Keep silent here; existing UI error handling in fetchers is sufficient.
+    }
+  }, PENDING_DONATION_REFRESH_INTERVAL_MS)
+}
+
+const resetWithdrawalForm = () => {
+  withdrawalForm.value = {
+    amount: 50000,
+    bank_name: '',
+    account_name: user.value?.nama_lengkap || '',
+    account_number: '',
+    notes: '',
+  }
+}
+
+const submitWithdrawal = async () => {
+  try {
+    withdrawalError.value = ''
+    withdrawalSuccess.value = ''
+    withdrawalSubmitting.value = true
+
+    const response = await api.post('/withdrawals/my', {
+      amount: Number(withdrawalForm.value.amount),
+      bank_name: withdrawalForm.value.bank_name,
+      account_name: withdrawalForm.value.account_name,
+      account_number: withdrawalForm.value.account_number,
+      notes: withdrawalForm.value.notes || undefined,
+    })
+
+    withdrawalSuccess.value = `Request withdraw ${formatCurrency(response.data.data.withdrawal.amount)} berhasil dibuat.`
+    resetWithdrawalForm()
+    await Promise.all([fetchMyProfile(), fetchWithdrawals()])
+  } catch (error) {
+    withdrawalError.value = error.message || 'Gagal membuat request withdraw.'
+  } finally {
+    withdrawalSubmitting.value = false
+  }
+}
+
+const cancelWithdrawal = async (withdrawalId) => {
+  try {
+    withdrawalError.value = ''
+    withdrawalSuccess.value = ''
+    withdrawalCancelingId.value = withdrawalId
+    await api.patch(`/withdrawals/my/${withdrawalId}/cancel`)
+    withdrawalSuccess.value = 'Request withdraw berhasil dibatalkan dan saldo dikembalikan.'
+    await Promise.all([fetchMyProfile(), fetchWithdrawals()])
+  } catch (error) {
+    withdrawalError.value = error.message || 'Gagal membatalkan request withdraw.'
+  } finally {
+    withdrawalCancelingId.value = ''
+  }
+}
+
+const formatWithdrawalStatus = (status) => {
+  if (status === 'PENDING') return 'Menunggu Proses'
+  if (status === 'PROCESSING') return 'Diproses'
+  if (status === 'SUCCESS') return 'Berhasil'
+  if (status === 'FAILED') return 'Gagal'
+  if (status === 'CANCELLED') return 'Dibatalkan'
+  return status
+}
+
+const maskAccountNumber = (accountNumber) => {
+  if (!accountNumber) return '-'
+  if (accountNumber.length <= 4) return accountNumber
+  return `••••${accountNumber.slice(-4)}`
+}
+
+resetWithdrawalForm()
+
+watch(
+  () => pendingDonations.value.length,
+  () => {
+    syncPendingDonationRefresh()
+  },
+)
+
+onBeforeUnmount(() => {
+  stopPendingDonationRefresh()
+})
 </script>
 
 <template>
@@ -169,10 +364,10 @@ const getAvatarColor = (str) => {
             </svg>
             <span class="font-medium text-[14px]">Overlay</span>
           </button>
-          <a href="#" class="flex items-center space-x-3 px-4 py-3.5 rounded-2xl text-gray-400 hover:text-white hover:bg-[#1a2337] transition-all">
+          <button type="button" @click="handleGoToWallet" class="flex w-full items-center space-x-3 px-4 py-3.5 rounded-2xl text-gray-400 hover:text-white hover:bg-[#1a2337] transition-all">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
             <span class="font-medium text-[14px]">Wallet</span>
-          </a>
+          </button>
           <a href="#" class="flex items-center space-x-3 px-4 py-3.5 rounded-2xl text-gray-400 hover:text-white hover:bg-[#1a2337] transition-all">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             <span class="font-medium text-[14px]">Settings</span>
@@ -211,6 +406,10 @@ const getAvatarColor = (str) => {
         </div>
       </div>
 
+      <div v-if="dashboardError" class="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        {{ dashboardError }}
+      </div>
+
       <!-- Stats Card -->
       <div class="relative w-full rounded-[32px] p-8 mb-12 shadow-[0_20px_40px_rgba(20,50,200,0.15)]"
            style="background: linear-gradient(135deg, #1742c3 0%, #0d268f 100%);">
@@ -228,14 +427,14 @@ const getAvatarColor = (str) => {
             <span>TOTAL PENDAPATAN</span>
           </div>
           <div class="text-[28px] font-bold text-white mb-2">
-            Rp{{ Number(user?.saldo_aktif || 0).toLocaleString('id-ID') }}
+            {{ formatCurrency(stats.total_pendapatan || user?.saldo_aktif || 0) }}
           </div>
           <div class="flex items-center space-x-3 text-sm">
             <div class="flex items-center space-x-1 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">
               <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-              <span>+18.4%</span>
+              <span>{{ stats.total_donasi_sukses }} donasi sukses</span>
             </div>
-            <span class="text-blue-200/60 font-medium">vs bulan lalu</span>
+            <span class="text-blue-200/60 font-medium">{{ stats.total_diblokir_ai }} pesan diblokir AI</span>
           </div>
         </div>
 
@@ -322,11 +521,284 @@ const getAvatarColor = (str) => {
         </div>
       </div>
 
+      <div class="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6 mb-12">
+        <div class="rounded-[28px] border border-[#212b42] bg-[#101623] p-6">
+          <div class="flex items-start justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-xl font-bold">Ringkasan Moderasi AI</h2>
+              <p class="mt-1 text-[13px] text-[#7a8ba8]">
+                Panel ini menunjukkan performa filter AI terhadap pesan donasi yang masuk.
+              </p>
+            </div>
+            <div class="px-3 py-1 rounded-full text-[12px] font-bold tracking-wide border border-[#043324] text-emerald-400 bg-[#071d16]">
+              Aktif
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="rounded-2xl border border-[#1f2b45] bg-[#0d1323] p-4">
+              <div class="text-[12px] uppercase tracking-[0.18em] text-[#6e83aa] mb-2">Donasi Sukses</div>
+              <div class="text-2xl font-black text-white">{{ stats.total_donasi_sukses }}</div>
+              <div class="mt-2 text-[13px] text-emerald-400">Lolos moderasi dan selesai dibayar</div>
+            </div>
+
+            <div class="rounded-2xl border border-[#3a2614] bg-[#1a1208] p-4">
+              <div class="text-[12px] uppercase tracking-[0.18em] text-[#caa97f] mb-2">Menunggu Bayar</div>
+              <div class="text-2xl font-black text-white">{{ pendingDonations.length }}</div>
+              <div class="mt-2 text-[13px] text-amber-400">Lolos AI, menunggu pembayaran</div>
+            </div>
+
+            <div class="rounded-2xl border border-[#3c1624] bg-[#1d0d14] p-4">
+              <div class="text-[12px] uppercase tracking-[0.18em] text-[#d8a2b1] mb-2">Diblokir AI</div>
+              <div class="text-2xl font-black text-white">{{ stats.total_diblokir_ai }}</div>
+              <div class="mt-2 text-[13px] text-rose-400">Tertahan sebelum masuk payment gateway</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[28px] border border-[#212b42] bg-[#101623] p-6">
+          <div class="flex items-start justify-between gap-4 mb-5">
+            <div>
+              <h2 class="text-xl font-bold">Log Moderasi Terbaru</h2>
+              <p class="mt-1 text-[13px] text-[#7a8ba8]">Menampilkan percobaan donasi yang diblokir.</p>
+            </div>
+            <div class="text-[12px] font-bold text-rose-300">{{ blockedDonations.length }} item</div>
+          </div>
+
+          <div v-if="blockedDonations.length === 0" class="rounded-2xl border border-[#1f2b45] bg-[#0d1323] p-5 text-sm text-[#7a8ba8]">
+            Belum ada pesan yang diblokir AI. Ini bagus untuk demo kestabilan, tapi Anda bisa trigger satu contoh dari form donasi untuk menunjukkan moderasi bekerja.
+          </div>
+
+          <div v-else class="space-y-3">
+            <div
+              v-for="donation in blockedDonations.slice(0, 3)"
+              :key="donation.id"
+              class="rounded-2xl border border-[#3c1624] bg-[#1d0d14] p-4"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <div class="font-bold text-white">{{ donation.nama_donatur }}</div>
+                <div class="text-[11px] font-medium text-[#c88ca1]">{{ timeAgo(donation.createdAt) }}</div>
+              </div>
+              <div class="mt-2 text-[13px] text-[#e8d7dd]">{{ donation.pesan || 'Tidak ada pesan' }}</div>
+              <div class="mt-3 inline-flex rounded-full bg-rose-500/10 px-3 py-1 text-[12px] font-semibold text-rose-300">
+                {{ donation.ai_reason || 'Terdeteksi pelanggaran moderasi' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div ref="walletSection" class="grid grid-cols-1 xl:grid-cols-[0.95fr_1.05fr] gap-6 mb-12">
+        <div class="rounded-[28px] border border-[#212b42] bg-[#101623] p-6">
+          <div class="flex items-start justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-xl font-bold">Wallet & Withdraw</h2>
+              <p class="mt-1 text-[13px] text-[#7a8ba8]">
+                Fitur ini menunjukkan saldo siap cair, saldo tertahan, dan request payout yang bisa didemokan ke client.
+              </p>
+            </div>
+            <div class="rounded-full border border-[#1d3d2f] bg-[#0b1f16] px-3 py-1 text-[12px] font-bold text-emerald-300">
+              MVP Siap Demo
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="rounded-2xl border border-[#1f2b45] bg-[#0d1323] p-5">
+              <div class="text-[12px] uppercase tracking-[0.18em] text-[#6e83aa] mb-2">Saldo Aktif</div>
+              <div class="text-2xl font-black text-white">{{ formatCurrency(availableBalance) }}</div>
+              <div class="mt-2 text-[13px] text-emerald-400">Siap diajukan untuk withdraw</div>
+            </div>
+
+            <div class="rounded-2xl border border-[#3a2614] bg-[#1a1208] p-5">
+              <div class="text-[12px] uppercase tracking-[0.18em] text-[#caa97f] mb-2">Saldo Tertahan</div>
+              <div class="text-2xl font-black text-white">{{ formatCurrency(heldBalance) }}</div>
+              <div class="mt-2 text-[13px] text-amber-400">Sedang menunggu proses payout</div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-[#1f2b45] bg-[#0d1323] p-5">
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 class="text-lg font-bold text-white">Ajukan Withdraw Baru</h3>
+                <p class="mt-1 text-[13px] text-[#7a8ba8]">Minimum withdraw Rp50.000. Pada MVP ini request dicatat dan dipindahkan ke saldo tertahan.</p>
+              </div>
+              <div class="rounded-full bg-blue-500/10 px-3 py-1 text-[12px] font-semibold text-blue-300">
+                Manual Review
+              </div>
+            </div>
+
+            <div v-if="withdrawalError" class="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              {{ withdrawalError }}
+            </div>
+
+            <div v-if="withdrawalSuccess" class="mb-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+              {{ withdrawalSuccess }}
+            </div>
+
+            <form class="space-y-4" @submit.prevent="submitWithdrawal">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="block">
+                  <span class="mb-2 block text-[12px] font-semibold uppercase tracking-[0.18em] text-[#6e83aa]">Nominal</span>
+                  <input
+                    v-model.number="withdrawalForm.amount"
+                    type="number"
+                    min="50000"
+                    step="1000"
+                    class="w-full rounded-2xl border border-[#24314b] bg-[#111a2b] px-4 py-3 text-white outline-none transition focus:border-blue-400"
+                  />
+                </label>
+
+                <label class="block">
+                  <span class="mb-2 block text-[12px] font-semibold uppercase tracking-[0.18em] text-[#6e83aa]">Bank / E-Wallet</span>
+                  <input
+                    v-model.trim="withdrawalForm.bank_name"
+                    type="text"
+                    placeholder="BCA / BNI / OVO"
+                    class="w-full rounded-2xl border border-[#24314b] bg-[#111a2b] px-4 py-3 text-white outline-none transition focus:border-blue-400"
+                  />
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="block">
+                  <span class="mb-2 block text-[12px] font-semibold uppercase tracking-[0.18em] text-[#6e83aa]">Nama Pemilik</span>
+                  <input
+                    v-model.trim="withdrawalForm.account_name"
+                    type="text"
+                    class="w-full rounded-2xl border border-[#24314b] bg-[#111a2b] px-4 py-3 text-white outline-none transition focus:border-blue-400"
+                  />
+                </label>
+
+                <label class="block">
+                  <span class="mb-2 block text-[12px] font-semibold uppercase tracking-[0.18em] text-[#6e83aa]">Nomor Rekening</span>
+                  <input
+                    v-model.trim="withdrawalForm.account_number"
+                    type="text"
+                    class="w-full rounded-2xl border border-[#24314b] bg-[#111a2b] px-4 py-3 text-white outline-none transition focus:border-blue-400"
+                  />
+                </label>
+              </div>
+
+              <label class="block">
+                <span class="mb-2 block text-[12px] font-semibold uppercase tracking-[0.18em] text-[#6e83aa]">Catatan</span>
+                <textarea
+                  v-model.trim="withdrawalForm.notes"
+                  rows="3"
+                  placeholder="Opsional, misalnya payout mingguan"
+                  class="w-full rounded-2xl border border-[#24314b] bg-[#111a2b] px-4 py-3 text-white outline-none transition focus:border-blue-400"
+                ></textarea>
+              </label>
+
+              <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div class="text-[13px] text-[#7a8ba8]">
+                  Setelah request dibuat, saldo aktif akan dipindahkan ke saldo tertahan sampai diproses.
+                </div>
+                <button
+                  type="submit"
+                  :disabled="!canSubmitWithdrawal"
+                  class="rounded-2xl px-5 py-3 text-sm font-bold text-white transition"
+                  :class="canSubmitWithdrawal ? 'bg-blue-600 hover:bg-blue-500' : 'cursor-not-allowed bg-slate-700 text-slate-300'"
+                >
+                  {{ withdrawalSubmitting ? 'Mengirim...' : 'Ajukan Withdraw' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="rounded-[28px] border border-[#212b42] bg-[#101623] p-6">
+          <div class="flex items-start justify-between gap-4 mb-5">
+            <div>
+              <h2 class="text-xl font-bold">Riwayat Withdraw</h2>
+              <p class="mt-1 text-[13px] text-[#7a8ba8]">Menampilkan request payout terbaru beserta status prosesnya.</p>
+            </div>
+            <div class="text-[12px] font-bold text-blue-300">{{ withdrawals.length }} request</div>
+          </div>
+
+          <div v-if="withdrawalLoading" class="space-y-3">
+            <div v-for="i in 3" :key="i" class="animate-pulse rounded-2xl border border-[#1f2b45] bg-[#0d1323] p-4">
+              <div class="mb-3 h-4 w-32 rounded bg-[#1c263e]"></div>
+              <div class="h-3 w-full rounded bg-[#1c263e]"></div>
+            </div>
+          </div>
+
+          <div v-else-if="withdrawals.length === 0" class="rounded-2xl border border-[#1f2b45] bg-[#0d1323] p-5 text-sm text-[#7a8ba8]">
+            Belum ada request withdraw. Buat satu request agar client bisa melihat alur payout dari sisi streamer.
+          </div>
+
+          <div v-else class="space-y-3">
+            <div
+              v-for="withdrawal in withdrawals"
+              :key="withdrawal.id"
+              class="rounded-2xl border border-[#1f2b45] bg-[#0d1323] p-4"
+            >
+              <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <div class="text-lg font-bold text-white">{{ formatCurrency(withdrawal.amount) }}</div>
+                    <div
+                      class="rounded-full px-3 py-1 text-[11px] font-bold"
+                      :class="withdrawal.status === 'PENDING'
+                        ? 'bg-amber-500/10 text-amber-300'
+                        : withdrawal.status === 'SUCCESS'
+                          ? 'bg-emerald-500/10 text-emerald-300'
+                          : withdrawal.status === 'FAILED'
+                            ? 'bg-rose-500/10 text-rose-300'
+                            : 'bg-slate-500/10 text-slate-300'"
+                    >
+                      {{ formatWithdrawalStatus(withdrawal.status) }}
+                    </div>
+                  </div>
+                  <div class="mt-2 text-[13px] text-[#c4d0e7]">
+                    {{ withdrawal.bank_name }} • {{ maskAccountNumber(withdrawal.account_number) }} • {{ withdrawal.account_name }}
+                  </div>
+                  <div class="mt-1 text-[12px] text-[#7a8ba8]">
+                    Diajukan {{ timeAgo(withdrawal.createdAt) }}
+                  </div>
+                  <div v-if="withdrawal.notes" class="mt-3 text-[13px] text-[#8fa3c6]">
+                    {{ withdrawal.notes }}
+                  </div>
+                  <div v-if="withdrawal.failure_reason" class="mt-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-200">
+                    {{ withdrawal.failure_reason }}
+                  </div>
+                </div>
+
+                <button
+                  v-if="withdrawal.status === 'PENDING'"
+                  type="button"
+                  @click="cancelWithdrawal(withdrawal.id)"
+                  :disabled="withdrawalCancelingId === withdrawal.id"
+                  class="rounded-2xl border border-[#3a2614] bg-[#1a1208] px-4 py-2 text-[12px] font-bold text-amber-300 transition hover:border-amber-400 hover:text-amber-200"
+                >
+                  {{ withdrawalCancelingId === withdrawal.id ? 'Membatalkan...' : 'Batalkan' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Support History -->
       <div class="w-full">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold">Riwayat Dukungan</h2>
-          <a href="#" class="text-[13px] font-bold text-blue-400 hover:text-blue-300 transition-colors">Lihat Semua</a>
+          <div>
+            <h2 class="text-xl font-bold">Aktivitas Donasi & Moderasi</h2>
+            <p class="mt-1 text-[13px] text-[#7a8ba8]">Gunakan filter ini saat demo untuk menunjukkan alur sukses, pending, dan diblokir.</p>
+          </div>
+          <div class="flex flex-wrap gap-2 justify-end">
+            <button
+              v-for="tab in donationFeedTabs"
+              :key="tab.id"
+              type="button"
+              @click="activeFeed = tab.id"
+              class="rounded-full border px-4 py-2 text-[12px] font-bold transition-all"
+              :class="activeFeed === tab.id
+                ? 'border-blue-400 bg-blue-500/20 text-white'
+                : 'border-[#2c3953] bg-[#12192a] text-[#8ca0c7] hover:text-white'"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
         </div>
 
         <div class="rounded-[28px] border border-[#212b42] p-2" style="background-color: #101623;">
@@ -346,18 +818,25 @@ const getAvatarColor = (str) => {
             </template>
 
             <!-- Empty State -->
-            <div v-else-if="donations.length === 0" class="flex flex-col items-center justify-center p-10 text-center">
+            <div v-else-if="filteredDonations.length === 0" class="flex flex-col items-center justify-center p-10 text-center">
               <div class="w-16 h-16 rounded-full bg-[#1c263e] flex items-center justify-center mb-4 text-gray-500">
                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4M8 16l-4-4 4-4"></path></svg>
               </div>
-              <h3 class="text-white font-bold text-lg mb-1">Belum ada dukungan</h3>
-              <p class="text-[13px] text-gray-500 max-w-sm">Dukungan dari penontonmu akan muncul di sini. Bagikan link My Page-mu untuk mulai menerima dukungan!</p>
+              <h3 class="text-white font-bold text-lg mb-1">Belum ada data pada filter ini</h3>
+              <p class="text-[13px] text-gray-500 max-w-sm">Coba ganti filter atau lakukan donasi uji untuk memperlihatkan alur yang ingin Anda demokan.</p>
             </div>
 
             <!-- Dynamic Items -->
             <template v-else>
-              <template v-for="(donation, index) in donations" :key="donation.id">
-                <div class="flex items-center justify-between p-4 rounded-2xl hover:bg-[#161d2d] transition-colors" :class="{'bg-[#1a111a]': donation.status === 'FAILED'}">
+              <template v-for="(donation, index) in filteredDonations" :key="donation.id">
+                <div
+                  class="flex items-center justify-between p-4 rounded-2xl hover:bg-[#161d2d] transition-colors"
+                  :class="{
+                    'bg-[#161d2d]': donation.status === 'SUCCESS',
+                    'bg-[#20170b]': donation.status === 'PENDING',
+                    'bg-[#1a111a]': donation.ai_status === 'BLOCKED',
+                  }"
+                >
                   <div class="flex items-center space-x-4">
                     <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-[15px]" 
                          :style="{ backgroundColor: getAvatarColor(donation.nama_donatur) }">
@@ -367,24 +846,29 @@ const getAvatarColor = (str) => {
                       <div class="flex items-center space-x-2">
                         <span class="font-bold text-[15px] text-white">{{ donation.nama_donatur }}</span>
                         <span class="text-[#516382] text-[12px] hidden sm:inline">{{ donation.email_donatur || '' }}</span>
-                        <span class="px-2 py-0.5 rounded text-[11px] font-bold text-emerald-400 bg-emerald-500/10">
-                          +Rp {{ Number(donation.jumlah).toLocaleString('id-ID') }}
+                        <span
+                          class="px-2 py-0.5 rounded text-[11px] font-bold"
+                          :class="donation.ai_status === 'BLOCKED'
+                            ? 'text-rose-300 bg-rose-500/10'
+                            : 'text-emerald-400 bg-emerald-500/10'"
+                        >
+                          {{ donation.ai_status === 'BLOCKED' ? 'Diblokir' : `+${formatCurrency(donation.jumlah)}` }}
                         </span>
                       </div>
                       <div class="text-[14px] text-[#94a3b8] mt-1 line-clamp-1">
-                        {{ donation.pesan || 'Tidak ada pesan' }}
+                        {{ donation.ai_status === 'BLOCKED' ? (donation.ai_reason || donation.pesan || 'Pesan diblokir AI') : (donation.pesan || 'Tidak ada pesan') }}
                       </div>
                     </div>
                   </div>
                   <div class="flex flex-col items-end hidden sm:flex shrink-0">
-                    <span class="text-[11px] text-[#516382] mb-2 font-medium">{{ timeAgo(donation.created_at) }}</span>
+                    <span class="text-[11px] text-[#516382] mb-2 font-medium">{{ timeAgo(donation.createdAt) }}</span>
                     <div v-if="donation.status === 'SUCCESS'" class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#043324] text-emerald-400 bg-[#071d16] text-[11px] font-bold">
                       <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                      <span>Aman</span>
+                      <span>Sukses</span>
                     </div>
-                    <div v-else-if="donation.status === 'FAILED'" class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#4c1d2e] text-red-400 bg-[#2d121c] text-[11px] font-bold">
-                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                      <span>Gagal / Difilter</span>
+                    <div v-else-if="donation.ai_status === 'BLOCKED'" class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#4c1d2e] text-red-400 bg-[#2d121c] text-[11px] font-bold">
+                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                      <span>Diblokir AI</span>
                     </div>
                     <div v-else-if="donation.status === 'PENDING'" class="flex items-center space-x-1 px-2.5 py-1 rounded-full border border-[#b45309] text-yellow-400 bg-[#451a03] text-[11px] font-bold">
                       <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -394,7 +878,7 @@ const getAvatarColor = (str) => {
                 </div>
 
                 <!-- Divider -->
-                <div v-if="index !== donations.length - 1" class="h-[1px] w-full bg-[#1c263e]"></div>
+                <div v-if="index !== filteredDonations.length - 1" class="h-[1px] w-full bg-[#1c263e]"></div>
               </template>
             </template>
 

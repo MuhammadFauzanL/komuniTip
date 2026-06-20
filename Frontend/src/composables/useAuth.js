@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import api from '../services/api'
+import api, { registerUnauthorizedHandler } from '../services/api'
 
 // ─── Shared Reactive State (Singleton) ───.
 let initialUser = null
@@ -34,6 +34,10 @@ function clearAuth() {
   localStorage.removeItem('user')
 }
 
+registerUnauthorizedHandler(() => {
+  clearAuth()
+})
+
 // ─── Auth Composable ───
 export function useAuth() {
 
@@ -48,8 +52,8 @@ export function useAuth() {
       username: payload.username,
       password: payload.password,
     })
-    // Tidak auto-login, memaksa user secara manual menuju halaman login setelah daftar
-    return data
+    setAuth(data.data)
+    return data.data
   }
 
   /**
@@ -62,7 +66,7 @@ export function useAuth() {
       password: payload.password,
     })
     setAuth(data.data)
-    return data
+    return data.data
   }
 
   /**
@@ -74,7 +78,7 @@ export function useAuth() {
       id_token: idToken,
     })
     setAuth(data.data)
-    return data
+    return data.data
   }
 
   /**
@@ -84,12 +88,8 @@ export function useAuth() {
   async function completeOnboarding(username) {
     const { data } = await api.post('/auth/onboarding', { username })
     setAuth(data.data)
-    if (user.value) {
-    user.value = { ...user.value, username: username }
+    return data.data
   }
-  
-  return data
-}
   
 
   /**
@@ -127,22 +127,15 @@ export function useAuth() {
       return response.data.data
     } catch (error) {
       console.error('Gagal mengambil data profil terbaru:', error)
-      if (error.response?.status === 401) {
+      if (error.status === 401) {
         logout();
       }
     }
   }
   const updateMyProfile = async (profileData) => {
-    // Tembak backend dengan data yang baru
-    const { data } = await api.patch('/auth/me/update', profileData)
-    
-    // Timpa memori browser dengan data terupdate (pakai data.data karena interseptor)
-    user.value = data.data.user
-    localStorage.setItem('user', JSON.stringify(data.data.user)) 
-    // Jangan lupa tokennya juga kalau ikut terganti
-    token.value = data.data.access_token
-    localStorage.setItem('access_token', data.data.access_token)
-    
+    const { data } = await api.patch('/auth/me', profileData)
+
+    setAuth(data.data)
     return data.data
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { OAuth2Client } from 'google-auth-library';
@@ -6,11 +6,13 @@ import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private googleClient: OAuth2Client;
 
   constructor(
@@ -22,7 +24,21 @@ export class AuthService {
   }
 
   // ─── HELPER: Generate internal JWT ───
- private generateAuthResponse(user: any) {
+  private generateAuthResponse(user: {
+    id: string;
+    email: string;
+    nama_lengkap: string;
+    username: string | null;
+    provider?: string;
+    role?: string;
+    saldo_aktif?: number | { toString(): string };
+    saldo_tertahan?: number | { toString(): string };
+    kategori?: string | null;
+    bio?: string | null;
+    instagram?: string | null;
+    youtube?: string | null;
+    twitter?: string | null;
+  }) {
     // Memasukkan role ke dalam Payload JWT agar ikut dienkripsi
     const payload = { 
       sub: user.id, 
@@ -35,11 +51,13 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
       user: {
         id: user.id,
-        nama: user.nama_lengkap,
+        nama_lengkap: user.nama_lengkap,
         username: user.username,
         email: user.email,
         provider: user.provider,
         role: user.role, 
+        saldo_aktif: Number(user.saldo_aktif ?? 0),
+        saldo_tertahan: Number(user.saldo_tertahan ?? 0),
         kategori: user.kategori,
         bio: user.bio,
         instagram: user.instagram,
@@ -87,7 +105,22 @@ export class AuthService {
         password_hash: hashedPassword,
         username: dto.username,
         provider: 'local',
-      }
+      },
+      select: {
+        id: true,
+        email: true,
+        nama_lengkap: true,
+        username: true,
+        provider: true,
+        role: true,
+        saldo_aktif: true,
+        saldo_tertahan: true,
+        kategori: true,
+        bio: true,
+        instagram: true,
+        youtube: true,
+        twitter: true,
+      },
     });
 
     // 5. Kembalikan Response dan berikan akses token
@@ -95,10 +128,12 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    const normalizedIdentifier = dto.identifier.trim().toLowerCase();
+
     // 1. Cek user ada atau tidak menggunakan Email atau Username
-    const isEmail = dto.identifier.includes('@');
-    const user = await this.prisma.user.findFirst({
-      where: isEmail ? { email: dto.identifier } : { username: dto.identifier }
+    const isEmail = normalizedIdentifier.includes('@');
+    const user = await this.prisma.user.findUnique({
+      where: isEmail ? { email: normalizedIdentifier } : { username: normalizedIdentifier }
     });
 
     if (!user) {
@@ -142,6 +177,22 @@ export class AuthService {
       // 2. Cek apakah user sudah terdaftar di database kita
       let user = await this.prisma.user.findUnique({
         where: { email },
+        select: {
+          id: true,
+          email: true,
+          nama_lengkap: true,
+          username: true,
+          provider: true,
+          google_id: true,
+          role: true,
+          saldo_aktif: true,
+          saldo_tertahan: true,
+          kategori: true,
+          bio: true,
+          instagram: true,
+          youtube: true,
+          twitter: true,
+        },
       });
 
       // 3. Jika belum terdaftar, otomatis daftarkan (Register)
@@ -154,6 +205,22 @@ export class AuthService {
             provider: 'google',
             google_id: google_id,
           },
+          select: {
+            id: true,
+            email: true,
+            nama_lengkap: true,
+            username: true,
+            provider: true,
+            google_id: true,
+            role: true,
+            saldo_aktif: true,
+            saldo_tertahan: true,
+            kategori: true,
+            bio: true,
+            instagram: true,
+            youtube: true,
+            twitter: true,
+          },
         });
       }
 
@@ -162,14 +229,33 @@ export class AuthService {
         user = await this.prisma.user.update({
           where: { id: user.id },
           data: { google_id, provider: 'google' },
+          select: {
+            id: true,
+            email: true,
+            nama_lengkap: true,
+            username: true,
+            provider: true,
+            google_id: true,
+            role: true,
+            saldo_aktif: true,
+            saldo_tertahan: true,
+            kategori: true,
+            bio: true,
+            instagram: true,
+            youtube: true,
+            twitter: true,
+          },
         });
       }
 
       // 5. Terbitkan Super Token (JWT) milik aplikasi kita
       return this.generateAuthResponse(user);
 
-    }catch (error) {
-      console.error('GOOGLE AUTH ERROR DETAIL:', error);
+    } catch (error) {
+      this.logger.error(
+        'Google auth verification failed',
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new UnauthorizedException('Token Google ditolak atau kadaluarsa');
     }
   }
@@ -186,6 +272,21 @@ export class AuthService {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: { username },
+      select: {
+        id: true,
+        email: true,
+        nama_lengkap: true,
+        username: true,
+        provider: true,
+        role: true,
+        saldo_aktif: true,
+        saldo_tertahan: true,
+        kategori: true,
+        bio: true,
+        instagram: true,
+        youtube: true,
+        twitter: true,
+      },
     });
 
     // Generate token baru dengan username yang sudah update
@@ -277,6 +378,7 @@ export class AuthService {
         provider: true,
         role: true,
         saldo_aktif: true,
+        saldo_tertahan: true,
         kategori: true,
         bio: true,
         instagram: true,
@@ -290,22 +392,18 @@ export class AuthService {
       throw new UnauthorizedException('User tidak ditemukan');
     }
 
-    return user;
+    return {
+      ...user,
+      saldo_aktif: Number(user.saldo_aktif),
+      saldo_tertahan: Number(user.saldo_tertahan),
+    };
   }
 
   // ─── UPDATE PROFIL KREATOR ───
     async updateProfile(
-      userId: string, data: { 
-        nama?: string; 
-        username?: string; 
-        kategori?: string; 
-        bio?: string; 
-        instagram?: string; 
-        youtube?: string; 
-        twitter?: string 
-        }
-      ) 
-    { 
+      userId: string,
+      data: UpdateProfileDto,
+    ) {
     // Cegah kembar username
     if (data.username) {
       const existing = await this.prisma.user.findUnique({ where: { username: data.username } });
@@ -317,7 +415,7 @@ export class AuthService {
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
-     nama_lengkap: data.nama,
+     nama_lengkap: data.nama_lengkap,
         username: data.username,
         kategori: data.kategori,
         bio: data.bio,
@@ -330,8 +428,10 @@ export class AuthService {
         email: true,
         nama_lengkap: true,
         username: true,
+        provider: true,
         role: true,
         saldo_aktif: true,
+        saldo_tertahan: true,
         kategori: true,
         bio: true,
         instagram: true,

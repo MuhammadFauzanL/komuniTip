@@ -40,6 +40,7 @@ services:
     build:
       context: ./backend
       target: development
+    command: npm run start:dev:docker
     container_name: komunitip-backend
     restart: unless-stopped
     ports:
@@ -85,7 +86,8 @@ services:
       - ./Frontend:/usr/src/app
       - /usr/src/app/node_modules
     environment:
-      - VITE_API_URL=http://backend-api:3000
+      - VITE_API_BASE_URL=http://localhost:${PORT:-3000}/api
+      - VITE_API_PROXY_TARGET=http://backend-api:3000
     networks:
       - komunitip-network
 
@@ -106,7 +108,6 @@ services:
 
 volumes:
   postgres-data:
-    name: backend_postgres-data  
 
 networks:
   komunitip-network:
