@@ -90,6 +90,14 @@ const handleGoToOverlay = () => {
   router.push('/overlay')
 }
 
+const handleGoToProfile = () => {
+  router.push('/profile')
+}
+
+const handleGoToWallet = () => {
+  router.push('/dashboard')
+}
+
 const copyText = async (value, successMessage) => {
   await navigator.clipboard.writeText(value)
   notice.value = successMessage
@@ -223,63 +231,88 @@ onMounted(loadSettings)
     </div>
 
     <!-- SIDEBAR -->
-    <aside class="relative z-10 w-[280px] m-4 mr-0 rounded-[30px] flex flex-col pt-8 pb-6 px-4 hidden xl:flex"
-           style="background-color: #12192a; box-shadow: 0 4px 40px rgba(0,0,0,0.3);">
-      
-      <!-- Logo -->
-      <div class="flex items-center space-x-3 px-4 mb-10">
-        <img :src="StandingMascot" alt="KomuniTip" class="w-10 h-10 object-contain drop-shadow-md -scale-x-100 -rotate-2" />
-        <span class="text-xl font-bold tracking-wide">KomuniTip</span>
-      </div>
+    <aside
+      class="relative z-10 m-4 mr-0 hidden w-[232px] flex-col overflow-hidden rounded-[40px] border border-[#314158] bg-[#0f172b] shadow-[6px_6px_0px_0px_#020617] xl:flex"
+    >
+      <div class="absolute left-[100px] top-0 h-32 w-32 rounded-bl-[100px] bg-[#1c398e4d]" />
 
-      <!-- Profile -->
-      <div class="flex items-center space-x-4 px-4 py-3 mx-2 mb-8 rounded-2xl border border-[#212b42]" 
-           style="background-color: #161e31;">
-        <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-800 border-2 border-[#1c263e]">
-          <img :src="ProfileImage" class="w-full h-full object-cover" />
+      <div class="px-6 pb-6 pt-8">
+        <div class="mb-9 flex items-center gap-3">
+          <img :src="StandingMascot" alt="KomuniTip" class="h-12 w-12 object-contain -scale-x-100 -rotate-2" />
+          <span class="text-xl font-bold tracking-tight text-slate-100">KomuniTip</span>
         </div>
-        <div>
-          <div class="text-[15px] font-semibold text-white">
-            {{ creatorName }}
-          </div>
-          <div class="text-[12px] text-blue-400 font-bold mt-0.5">
-            {{ creatorTier }}
-          </div>
-        </div>
-      </div>
 
-      <!-- Navigation -->
-      <div class="flex-1 overflow-y-auto scrollbar-hide px-2">
+        <div
+          class="mb-8 flex cursor-pointer items-center gap-4 rounded-3xl border border-[#314158] bg-[#1d293d] px-4 py-4 shadow-[4px_4px_0px_#020617]"
+          @click="handleGoToProfile"
+        >
+          <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[#45556c] bg-[#0f172b]">
+            <img :src="ProfileImage" alt="Profile" class="h-10 w-10 object-cover" />
+          </div>
+          <div class="min-w-0">
+            <p class="truncate text-base font-bold text-slate-100">{{ user?.nama_lengkap?.split(' ')[0] || 'Kreator' }}</p>
+            <p class="text-xs font-bold text-[#51a2ff]">
+              {{ user?.role === 'ADMIN' ? 'Admin' : 'Kreator Pro' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="mb-3 px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[#62748e]">Menu Utama</div>
+
         <nav class="space-y-2">
-          <button @click="handleGoToDashboard" class="flex w-full items-center space-x-3 px-4 py-3.5 rounded-2xl text-gray-400 hover:text-white hover:bg-[#1a2337] transition-all">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-            <span class="font-medium text-[14px]">Dashboard</span>
+          <button
+            class="flex h-[55px] w-full items-center gap-3 rounded-2xl px-4 text-left text-slate-400 transition hover:bg-[#1a2337] hover:text-white"
+            @click="handleGoToDashboard"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <span class="text-sm font-bold">Dashboard</span>
           </button>
-          
-          <button @click="handleGoToOverlay" class="flex w-full items-center space-x-3 px-4 py-3.5 rounded-2xl bg-blue-600 text-white transition-all shadow-[0_4px_12px_rgba(37,99,235,0.3)]">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+
+          <button
+            class="flex h-[55px] w-full items-center gap-3 rounded-2xl border border-[#51a2ff] bg-[#155dfc] px-4 text-left text-white shadow-[4px_4px_0px_0px_#1e3a8a]"
+            type="button"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="2" fill="currentColor" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M16.24 7.76a6 6 0 0 1 0 8.49m2.83-11.32a10 10 0 0 1 0 14.14M7.76 16.24a6 6 0 0 1 0-8.49m-2.83 11.32a10 10 0 0 1 0-14.14" />
             </svg>
-            <span class="font-medium text-[14px]">Overlay</span>
+            <span class="text-sm font-bold">Overlay</span>
           </button>
-          
-          <button type="button" class="flex w-full items-center space-x-3 px-4 py-3.5 rounded-2xl text-gray-400 hover:text-white hover:bg-[#1a2337] transition-all">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-            <span class="font-medium text-[14px]">Wallet</span>
+
+          <button
+            class="flex h-[55px] w-full items-center gap-3 rounded-2xl px-4 text-left text-slate-400 transition hover:bg-[#1a2337] hover:text-white"
+            @click="handleGoToWallet"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+            <span class="text-sm font-bold">Wallet</span>
           </button>
-          
-          <button type="button" class="flex w-full items-center space-x-3 px-4 py-3.5 rounded-2xl text-gray-400 hover:text-white hover:bg-[#1a2337] transition-all">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            <span class="font-medium text-[14px]">Settings</span>
+
+          <button
+            class="flex h-[55px] w-full items-center gap-3 rounded-2xl px-4 text-left text-slate-400 transition hover:bg-[#1a2337] hover:text-white"
+            type="button"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span class="text-sm font-bold">Settings</span>
           </button>
         </nav>
       </div>
 
-      <div class="mt-auto px-2">
-        <button @click="handleLogout" class="flex w-full items-center space-x-3 px-4 py-3.5 rounded-2xl text-gray-400 hover:text-white hover:bg-[#1a2337] transition-all">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-          <span class="font-medium text-[14px]">Keluar</span>
+      <div class="mt-auto px-6 pb-6">
+        <button
+          class="flex h-[51px] w-full items-center gap-3 rounded-2xl px-4 text-left text-slate-400 transition hover:bg-[#1a2337] hover:text-white"
+          @click="handleLogout"
+        >
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span class="text-sm font-bold">Keluar</span>
         </button>
       </div>
     </aside>

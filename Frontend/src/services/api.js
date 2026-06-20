@@ -41,10 +41,16 @@ api.interceptors.response.use(
     }
 
     const responseData = error.response?.data
+    const messagePayload = responseData?.message
+    const details =
+      messagePayload && typeof messagePayload === 'object' && !Array.isArray(messagePayload)
+        ? { ...responseData, ...messagePayload }
+        : responseData
+
     const rawMessage =
-      responseData?.message ??
-      responseData?.reason ??
-      responseData?.error ??
+      details?.reason ??
+      (typeof messagePayload === 'string' || Array.isArray(messagePayload) ? messagePayload : undefined) ??
+      details?.error ??
       'Terjadi kesalahan. Silakan coba lagi.'
 
     // Normalize to single string (NestJS validation returns array of messages)
@@ -52,7 +58,7 @@ api.interceptors.response.use(
     const normalizedError = new Error(errorMessage)
 
     normalizedError.status = error.response?.status
-    normalizedError.details = responseData
+    normalizedError.details = details
 
     return Promise.reject(normalizedError)
   }

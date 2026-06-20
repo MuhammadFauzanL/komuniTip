@@ -34,7 +34,30 @@ services:
       retries: 5
 
   # ─────────────────────────────────────────
-  # 2. BACKEND API (NestJS)
+  # 2. AI MODERATION (FastAPI + ONNX)
+  # ─────────────────────────────────────────
+  ai-risk-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: komunitip-ai-risk-engine
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - MODEL_PATH=/app/risk-engine
+      - API_KEY=${AI_MODERATION_API_KEY}
+    networks:
+      - komunitip-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # 3. BACKEND API (NestJS)
   # ─────────────────────────────────────────
   backend-api:
     build:
@@ -47,6 +70,8 @@ services:
       - "${PORT:-3000}:3000"
     depends_on:
       postgres-db:
+        condition: service_healthy
+      ai-risk-engine:
         condition: service_healthy
     volumes:
       - ./backend:/usr/src/app
@@ -63,14 +88,16 @@ services:
       - MAIL_PASS=${MAIL_PASS}
       - MAIL_FROM=${MAIL_FROM}
       - FRONTEND_URL=${FRONTEND_URL}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - AI_MODERATION_URL=http://ai-risk-engine:8000
+      - AI_MODERATION_API_KEY=${AI_MODERATION_API_KEY}
+      - AI_MODERATION_TIMEOUT_MS=${AI_MODERATION_TIMEOUT_MS:-2000}
       - XENDIT_SECRET_KEY=${XENDIT_SECRET_KEY}
       - XENDIT_WEBHOOK_TOKEN=${XENDIT_WEBHOOK_TOKEN}
     networks:
       - komunitip-network
 
   # ─────────────────────────────────────────
-  # 3. FRONTEND (Vue 3 + Vite)
+  # 4. FRONTEND (Vue 3 + Vite)
   # ─────────────────────────────────────────
   frontend-app:
     build:
@@ -92,7 +119,7 @@ services:
       - komunitip-network
 
   # ─────────────────────────────────────────
-  # 4. ADMINER (Database GUI)
+  # 5. ADMINER (Database GUI)
   # ─────────────────────────────────────────
   adminer:
     image: adminer:latest

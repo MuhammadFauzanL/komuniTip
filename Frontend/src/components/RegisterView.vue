@@ -85,9 +85,9 @@ const handleGoogleSuccess = async (response) => {
     <!-- ───────── Background gradient ───────── -->
     <div class="fixed inset-0 z-0 pointer-events-none"
          style="background:
-           radial-gradient(ellipse 60% 60% at 10% 20%, #0d4a55 0%, transparent 70%),
-           radial-gradient(ellipse 55% 55% at 85% 50%, #174a44 0%, transparent 70%),
-           radial-gradient(ellipse 40% 40% at 50% 100%, #112830 0%, transparent 80%),
+           radial-gradient(ellipse 60% 60% at 10% 20%, #1a3a6e 0%, transparent 70%),
+           radial-gradient(ellipse 55% 55% at 85% 50%, #2b174a 0%, transparent 70%),
+           radial-gradient(ellipse 40% 40% at 50% 100%, #111830 0%, transparent 80%),
            #0a0f1e;">
     </div>
 
@@ -114,7 +114,7 @@ const handleGoogleSuccess = async (response) => {
 
 
     <!-- ───────── Main layout ───────── -->
-    <div class="relative z-10 flex-1 w-full flex flex-col xl:flex-row items-center xl:items-start justify-between max-w-7xl mx-auto px-6 xl:px-12 pt-4 pb-10 gap-8 xl:pt-[4%]">
+    <div class="relative z-10 flex-1 w-full flex flex-col xl:flex-row items-center xl:items-start justify-between max-w-7xl mx-auto px-6 xl:px-12 pt-4 pb-10 gap-8 xl:pt-[5%]">
 
       <!-- ═══ LEFT SECTION ═══ -->
       <div class="flex-1 w-full max-w-xl flex flex-col">
@@ -182,16 +182,7 @@ const handleGoogleSuccess = async (response) => {
 
 
       <!-- ═══ RIGHT SECTION — Register Form ═══ -->
-      <div class="flex-1 w-full max-w-[520px] flex flex-col items-center lg:items-end mx-auto lg:mt-0 relative">
-        
-        <!-- Login Link Top Right -->
-        <div class="w-full flex justify-end items-center gap-3 text-[15px] font-bold text-[#7a8ba8] mb-8">
-          Punya akun? 
-          <router-link to="/login" class="px-6 py-2 text-[15px] font-bold text-white rounded-[16px] transition-all hover:translate-y-[2px] active:translate-y-[4px]"
-             style="background: #2563eb; border: 2px solid #60a5fa; box-shadow: 0 4px 0 #1e3a8a;">
-            Masuk
-          </router-link>
-        </div>
+      <div class="flex-1 w-full max-w-[460px] flex flex-col items-center lg:mt-[40px] mx-auto">
 
         <!-- Form card -->
         <div class="w-full rounded-[28px] p-8 relative overflow-hidden"
@@ -212,7 +203,7 @@ const handleGoogleSuccess = async (response) => {
                 size: 'large',
                 text: 'signup_with',
                 shape: 'rectangular',
-                width: '456'
+                width: '396'
               }"
             />
           </div>
@@ -349,6 +340,12 @@ const handleGoogleSuccess = async (response) => {
                 <span v-if="loading">Memproses...</span>
                 <span v-else>Buat Akun Sekarang</span>
               </button>
+            </div>
+
+            <!-- Login link -->
+            <div class="text-center text-[14px] pt-4" style="color: #6b7280;">
+              Sudah punya akun? 
+              <router-link to="/login" class="font-bold ml-1 hover:opacity-80 transition-opacity" style="color: #60a5fa;">Masuk di sini</router-link>
             </div>
           </form>
         </div>

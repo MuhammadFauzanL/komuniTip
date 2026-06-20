@@ -61,6 +61,10 @@ export class PaymentService {
         payment_gateway_ref: true,
         ai_status: true,
         ai_reason: true,
+        ai_risk_score: true,
+        ai_confidence: true,
+        ai_execution_path: true,
+        ai_matched_keywords: true,
         createdAt: true,
         streamer: {
           select: {
@@ -86,6 +90,10 @@ export class PaymentService {
       payment_reference: donation.payment_gateway_ref,
       ai_status: donation.ai_status,
       ai_reason: donation.ai_reason,
+      ai_risk_score: donation.ai_risk_score,
+      ai_confidence: donation.ai_confidence,
+      ai_execution_path: donation.ai_execution_path,
+      ai_matched_keywords: donation.ai_matched_keywords,
       created_at: donation.createdAt,
       streamer: donation.streamer,
     };
