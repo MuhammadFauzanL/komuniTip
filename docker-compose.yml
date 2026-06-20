@@ -40,6 +40,7 @@ services:
     build:
       context: ./backend
       target: development
+    command: npm run start:dev:docker
     container_name: komunitip-backend
     restart: unless-stopped
     ports:
@@ -62,7 +63,6 @@ services:
       - MAIL_PASS=${MAIL_PASS}
       - MAIL_FROM=${MAIL_FROM}
       - FRONTEND_URL=${FRONTEND_URL}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - XENDIT_SECRET_KEY=${XENDIT_SECRET_KEY}
       - XENDIT_WEBHOOK_TOKEN=${XENDIT_WEBHOOK_TOKEN}
@@ -86,9 +86,8 @@ services:
       - ./Frontend:/usr/src/app
       - /usr/src/app/node_modules
     environment:
-      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-/api}
-      - VITE_API_PROXY_TARGET=${VITE_API_PROXY_TARGET:-http://backend-api:3000}
-      - VITE_SOCKET_URL=${VITE_SOCKET_URL:-}
+      - VITE_API_BASE_URL=http://localhost:${PORT:-3000}/api
+      - VITE_API_PROXY_TARGET=http://backend-api:3000
     networks:
       - komunitip-network
 
@@ -109,7 +108,6 @@ services:
 
 volumes:
   postgres-data:
-    name: backend_postgres-data  
 
 networks:
   komunitip-network:

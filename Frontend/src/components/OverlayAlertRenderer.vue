@@ -13,6 +13,9 @@ const socket = ref(null)
 const overlayQueue = ref([])
 const currentAlert = ref(null)
 const isPlaying = ref(false)
+const displayedDonationIds = new Set()
+let currentHideTimeout = null
+let nextQueueTimeout = null
 const overlaySettings = ref({
   min_donasi_alert: 10000,
   durasi_alert: 8,
@@ -51,8 +54,19 @@ onMounted(() => {
     if (Number(data.jumlah) < Number(overlaySettings.value.min_donasi_alert)) {
       return
     }
+    if (data.donation_id && displayedDonationIds.has(data.donation_id)) {
+      return
+    }
+    if (data.donation_id) {
+      displayedDonationIds.add(data.donation_id)
+    }
     overlayQueue.value.push(data)
     processQueue()
+  })
+
+  socket.value.on('settings_updated', () => {
+    console.log('🔄 Overlay settings updated, reloading...')
+    loadOverlaySettings()
   })
 
   socket.value.on('disconnect', () => {
@@ -76,6 +90,9 @@ const loadOverlaySettings = async () => {
 }
 
 onUnmounted(() => {
+  window.speechSynthesis?.cancel?.()
+  clearTimeout(currentHideTimeout)
+  clearTimeout(nextQueueTimeout)
   if (socket.value) {
     socket.value.disconnect()
   }
@@ -108,12 +125,14 @@ const playAlert = (alertData) => {
   }
 
   // Sembunyikan alert setelah durasi yang ditentukan
-  setTimeout(() => {
+  clearTimeout(currentHideTimeout)
+  clearTimeout(nextQueueTimeout)
+  currentHideTimeout = setTimeout(() => {
     currentAlert.value = null
     isPlaying.value = false
     
     // Beri jeda 1 detik sebelum memainkan alert berikutnya
-    setTimeout(processQueue, 1000)
+    nextQueueTimeout = setTimeout(processQueue, 1000)
   }, overlaySettings.value.durasi_alert * 1000)
 }
 

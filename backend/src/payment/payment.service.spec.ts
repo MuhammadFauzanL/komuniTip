@@ -11,7 +11,13 @@ describe('PaymentService', () => {
   const prismaMock = {
     donation: {
       findUnique: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
     },
+    user: {
+      update: jest.fn(),
+    },
+    $transaction: jest.fn(),
   };
 
   const configServiceMock = {
@@ -99,5 +105,105 @@ describe('PaymentService', () => {
     await expect(service.getDonationStatus('missing')).rejects.toThrow(
       BadRequestException,
     );
+  });
+
+  it('marks payment as mismatch when paid amount differs from expected amount', async () => {
+    configServiceMock.get = jest.fn((key: string) => {
+      const values: Record<string, string> = {
+        XENDIT_SECRET_KEY: 'xnd_test_key',
+        FRONTEND_URL: 'http://localhost:5173',
+        XENDIT_WEBHOOK_TOKEN: 'webhook-token',
+      };
+
+      return values[key];
+    });
+
+    prismaMock.donation.findUnique.mockResolvedValue({
+      id: 'donation-1',
+      jumlah: 50000,
+      status: 'PENDING',
+      nama_donatur: 'Budi',
+      pesan: 'Semangat',
+      streamerId: 'streamer-1',
+      streamer: { username: 'streamer-satu' },
+    });
+
+    const result = await service.handleWebhook('webhook-token', {
+      external_id: 'komunitip_donation-1',
+      status: 'PAID',
+      payment_method: 'QRIS',
+      paid_amount: 45000,
+    });
+
+    expect(prismaMock.donation.update).toHaveBeenCalledWith({
+      where: { id: 'donation-1' },
+      data: {
+        status: 'FAILED',
+        payment_method: 'QRIS',
+      },
+    });
+    expect(result).toEqual({
+      status: 'PAYMENT_MISMATCH',
+      donation_id: 'donation-1',
+    });
+    expect(donationGatewayMock.emitDonationAlert).not.toHaveBeenCalled();
+  });
+
+  it('credits saldo and emits overlay payload when payment succeeds', async () => {
+    configServiceMock.get = jest.fn((key: string) => {
+      const values: Record<string, string> = {
+        XENDIT_SECRET_KEY: 'xnd_test_key',
+        FRONTEND_URL: 'http://localhost:5173',
+        XENDIT_WEBHOOK_TOKEN: 'webhook-token',
+      };
+
+      return values[key];
+    });
+
+    prismaMock.donation.findUnique.mockResolvedValue({
+      id: 'donation-1',
+      jumlah: 50000,
+      status: 'PENDING',
+      nama_donatur: 'Budi',
+      pesan: 'Semangat',
+      streamerId: 'streamer-1',
+      streamer: { username: 'streamer-satu' },
+    });
+    prismaMock.donation.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.user.update.mockResolvedValue({});
+    prismaMock.$transaction.mockImplementation(async (callback: any) =>
+      callback({
+        donation: prismaMock.donation,
+        user: prismaMock.user,
+      }),
+    );
+
+    const result = await service.handleWebhook('webhook-token', {
+      external_id: 'komunitip_donation-1',
+      status: 'PAID',
+      payment_method: 'QRIS',
+      paid_amount: 50000,
+    });
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: 'streamer-1' },
+      data: {
+        saldo_aktif: { increment: 50000 },
+      },
+    });
+    expect(donationGatewayMock.emitDonationAlert).toHaveBeenCalledWith(
+      'streamer-satu',
+      expect.objectContaining({
+        donation_id: 'donation-1',
+        nama_donatur: 'Budi',
+        jumlah: 50000,
+        pesan: 'Semangat',
+        source: 'payment',
+      }),
+    );
+    expect(result).toEqual({
+      status: 'SUCCESS',
+      donation_id: 'donation-1',
+    });
   });
 });

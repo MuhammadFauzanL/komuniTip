@@ -13,8 +13,6 @@ import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 
-const emit = defineEmits([]) // No more emits needed for navigation
-
 const router = useRouter()
 const fullName = ref('')
 const username = ref('')
@@ -25,13 +23,10 @@ const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const loading = ref(false)
 const errorMsg = ref('')
-const successMsg = ref('')
-
 const { register, googleAuth } = useAuth()
 
 const handleRegister = async () => {
   errorMsg.value = ''
-  successMsg.value = ''
   
   if (password.value !== confirmPassword.value) {
     errorMsg.value = 'Password dan konfirmasi password tidak cocok!'
@@ -46,15 +41,18 @@ const handleRegister = async () => {
 
   loading.value = true
   try {
-    await register({ 
+    const auth = await register({ 
       nama_lengkap: fullName.value, 
       username: username.value,
       email: email.value, 
       password: password.value 
     })
-    
-    // Auto-onboarding check handled by global guard
-    router.push('/dashboard')
+
+    if (auth.require_onboarding) {
+      router.push('/onboarding')
+    } else {
+      router.push('/dashboard')
+    }
   } catch (err) {
     errorMsg.value = err.message || 'Gagal mendaftar, silakan coba lagi'
   } finally {
@@ -231,7 +229,6 @@ const handleGoogleSuccess = async (response) => {
 
             <!-- Alert Error & Success -->
             <div v-if="errorMsg" class="p-3 text-sm text-red-400 bg-red-900/30 border border-red-800 rounded-lg text-center">{{ errorMsg }}</div>
-            <div v-if="successMsg" class="p-3 text-sm text-emerald-400 bg-emerald-900/30 border border-emerald-800 rounded-lg text-center">{{ successMsg }}</div>
 
             <!-- Grid for Nama Lengkap & Username -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

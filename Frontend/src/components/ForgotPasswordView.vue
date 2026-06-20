@@ -12,8 +12,6 @@ import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 
-const emit = defineEmits(['goToLogin'])
-
 const router = useRouter()
 const email = ref('')
 const loading = ref(false)

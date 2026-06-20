@@ -73,4 +73,14 @@ export class UpdateOverlaySettingsDto {
   @IsOptional()
   @IsBoolean()
   tts_enabled?: boolean;
+
+  @ApiPropertyOptional({ example: false })
+  @IsOptional()
+  @IsBoolean()
+  ai_filter_enabled?: boolean;
+
+  @ApiPropertyOptional({ example: 'kasar, bodoh' })
+  @IsOptional()
+  @IsString()
+  banned_words?: string;
 }

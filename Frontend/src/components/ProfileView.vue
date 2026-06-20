@@ -30,7 +30,7 @@ const handleGoToOverlay = () => {
 }
 
 // Form state
-const displayName = ref(user.value?.nama_lengkap || user.value?.nama || '')
+const displayName = ref(user.value?.nama_lengkap || '')
 const username = ref(user.value?.username || '')
 const email = ref(user.value?.email || '')
 const isSaving = ref(false)
@@ -39,7 +39,7 @@ const handleSaveProfile = async () => {
   isSaving.value = true
   try {
     await updateMyProfile({
-      nama: displayName.value,
+      nama_lengkap: displayName.value,
       username: username.value,
       kategori: contentCategory.value,
       bio: bio.value,
@@ -47,7 +47,6 @@ const handleSaveProfile = async () => {
       youtube: youtube.value,
       twitter: twitter.value
     })
-    user.value.nama = displayName.value 
     alert("Profil Kreator berhasil diperbarui!")
   } catch (err) {
     alert(err.message || 'Gagal menyimpan profil')

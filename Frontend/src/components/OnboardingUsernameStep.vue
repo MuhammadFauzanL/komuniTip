@@ -13,8 +13,6 @@ import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 
-const emit = defineEmits(['onboardingComplete'])
-
 const username = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
@@ -40,7 +38,7 @@ const handleSubmit = async () => {
     await completeOnboarding(username.value)
     router.push('/dashboard')
   } catch (err) {
-    errorMsg.value = err.response?.data?.message || err.message || 'Gagal menyimpan username'
+    errorMsg.value = err.message || 'Gagal menyimpan username'
   } finally {
     loading.value = false
   }

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { DonationAlertPayload } from './socket.types';
 
 @WebSocketGateway({
   cors: {
@@ -43,8 +44,9 @@ export class DonationGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   // Dipanggil dari PaymentService setelah webhook SUCCESS
-  emitDonationAlert(username: string, donationData: any) {
-    this.logger.log(`📢 Emitting new_donation to room: ${username}`);
-    this.server.to(username).emit('new_donation', donationData);
+  emitDonationAlert(username: string, donationData: DonationAlertPayload) {
+    const room = username.trim();
+    this.logger.log(`📢 Emitting new_donation to room: ${room}`);
+    this.server.to(room).emit('new_donation', donationData);
   }
 }

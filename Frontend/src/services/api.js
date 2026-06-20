@@ -1,11 +1,16 @@
 import axios from 'axios'
+import { appConfig } from '../config/app-config'
+
+let unauthorizedHandler = () => {}
+
+export function registerUnauthorizedHandler(handler) {
+  unauthorizedHandler = typeof handler === 'function' ? handler : () => {}
+}
 
 // ─── Centralized API Client ───
 // All HTTP calls go through this instance.
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
-
 const api = axios.create({
-  baseURL: apiBaseUrl,
+  baseURL: appConfig.apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,6 +37,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('user')
+      unauthorizedHandler()
     }
 
     const responseData = error.response?.data

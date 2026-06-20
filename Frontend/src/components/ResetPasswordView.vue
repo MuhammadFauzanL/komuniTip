@@ -15,8 +15,6 @@ import IconBurung from '../assets/Icon_burung.png'
 const router = useRouter()
 const route = useRoute()
 const token = ref(route.query.token || '')
-const emit = defineEmits(['goToLogin', 'resetSuccess'])
-
 const password = ref('')
 const confirmPassword = ref('')
 const showPassword = ref(false)
@@ -52,7 +50,7 @@ const handleReset = async () => {
       router.push('/login')
     }, 2500)
   } catch (err) {
-    errorMsg.value = err.response?.data?.message || err.message || 'Gagal reset password'
+    errorMsg.value = err.message || 'Gagal reset password'
   } finally {
     loading.value = false
   }

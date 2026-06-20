@@ -13,13 +13,10 @@ import IconKotak from '../assets/Icon_kotak.png'
 import IconAngka1 from '../assets/Icon_angka1.png'
 import IconBurung from '../assets/Icon_burung.png'
 
-const emit = defineEmits(['goToRegister', 'goToForgotPassword', 'loginSuccess'])
-
 const router = useRouter()
 const identifier = ref('')
 const password = ref('')
 const showPassword = ref(false)
-const rememberMe = ref(false)
 const loading = ref(false)
 const errorMsg = ref('')
 
@@ -283,12 +280,8 @@ const handleGoogleError = (error) => {
               </div>
             </div>
 
-            <!-- Remember me / Forgot password -->
-            <div class="flex items-center justify-between text-[13px] pt-1">
-              <div class="flex items-center">
-                <input type="checkbox" v-model="rememberMe" id="remember" class="w-4 h-4 rounded border-[#334155] bg-[#1e293b] text-blue-600 focus:ring-blue-500" />
-                <label for="remember" class="ml-2 text-[#9ca3af] font-medium cursor-pointer">Ingat saya</label>
-              </div>
+            <!-- Forgot password -->
+            <div class="flex justify-end text-[13px] pt-1">
               <router-link to="/forgot-password" class="font-bold hover:underline" style="color: #60a5fa;">Lupa password?</router-link>
             </div>
 

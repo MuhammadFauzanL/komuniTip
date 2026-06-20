@@ -19,7 +19,7 @@ export class OverlayService {
   }
 
   async updateMyOverlaySettings(userId: string, dto: UpdateOverlaySettingsDto) {
-    return this.prisma.overlaySetting.upsert({
+    const updated = await this.prisma.overlaySetting.upsert({
       where: { streamerId: userId },
       update: {
         ...dto,
@@ -29,6 +29,17 @@ export class OverlayService {
         ...dto,
       },
     });
+
+    // Beritahu OBS/Renderer bahwa ada perubahan pengaturan
+    const streamer = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true },
+    });
+    if (streamer?.username) {
+      this.donationGateway.server.to(streamer.username).emit('settings_updated');
+    }
+
+    return updated;
   }
 
   async getPublicOverlaySettings(username: string) {
@@ -92,6 +103,7 @@ export class OverlayService {
       nama_donatur: 'KomuniTip Test',
       jumlah: testAmount,
       pesan: `Tes overlay untuk ${streamer.nama_lengkap}`,
+      source: 'overlay_test' as const,
     };
 
     this.donationGateway.emitDonationAlert(streamer.username, payload);
