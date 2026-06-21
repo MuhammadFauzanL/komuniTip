@@ -1,51 +1,103 @@
+import { ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AiModerationService } from './ai-moderation.service';
 
 describe('AiModerationService', () => {
   let service: AiModerationService;
+  let fetchMock: jest.Mock;
 
   beforeEach(() => {
+    fetchMock = jest.fn();
+    global.fetch = fetchMock as unknown as typeof fetch;
+
     const configService = {
-      get: jest.fn().mockReturnValue(undefined),
+      get: jest.fn((key: string) => {
+        const values: Record<string, string> = {
+          AI_MODERATION_URL: 'http://risk-engine:8000',
+          AI_MODERATION_API_KEY: 'secret-key',
+          AI_MODERATION_TIMEOUT_MS: '2000',
+        };
+
+        return values[key];
+      }),
+      getOrThrow: jest.fn((key: string) => {
+        const values: Record<string, string> = {
+          AI_MODERATION_URL: 'http://risk-engine:8000',
+          AI_MODERATION_API_KEY: 'secret-key',
+        };
+
+        return values[key];
+      }),
     } as unknown as ConfigService;
 
     service = new AiModerationService(configService);
   });
 
-  it('blocks gambling keywords in fallback mode', async () => {
-    await expect(service.moderateText('Budi', 'slot gacor maxwin')).resolves.toEqual({
-      safe: false,
-      reason: 'Terdeteksi promosi judi/spam: "gacor"',
+  it('maps a CLEAR response from the risk engine', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        donation_id: 'donation-1',
+        decision: 'CLEAR',
+        risk_score: 4,
+        matched_keywords: [],
+        execution_path: 'Layer-0-Only',
+      }),
     });
-  });
 
-  it('blocks leetspeak variants in fallback mode', async () => {
-    await expect(service.moderateText('Budi', 'sl0t g4c0r')).resolves.toEqual({
-      safe: false,
-      reason: 'Terdeteksi promosi judi/spam: "gacor"',
-    });
-  });
-
-  it('blocks suspicious external links in fallback mode', async () => {
     await expect(
-      service.moderateText('Budi', 'cek promo di https://bonus-spin.xyz'),
+      service.moderateDonation({
+        donation_id: 'donation-1',
+        raw_text: 'semangat terus bang',
+        amount: 10000,
+      }),
     ).resolves.toEqual({
-      safe: false,
-      reason: 'Terdeteksi tautan yang mencurigakan atau promosi eksternal',
+      donation_id: 'donation-1',
+      decision: 'CLEAR',
+      risk_score: 4,
+      matched_keywords: [],
+      execution_path: 'Layer-0-Only',
+      reason: undefined,
     });
   });
 
-  it('does not block normal words that only contain similar substrings', async () => {
-    await expect(service.moderateText('Budi', 'aku cukup senang hari ini')).resolves.toEqual({
-      safe: true,
+  it('adds a readable reason for HOLD responses', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        donation_id: 'donation-2',
+        decision: 'HOLD',
+        risk_score: 47,
+        matched_keywords: ['brand_pluto88'],
+        ai_confidence: 0.71,
+        execution_path: 'Layer-1-AI',
+      }),
     });
-  });
 
-  it('passes normal encouragement messages', async () => {
     await expect(
-      service.moderateText('Budi', 'semangat terus bang, kontennya keren'),
+      service.moderateDonation({
+        donation_id: 'donation-2',
+        raw_text: 'mampir pluto88',
+      }),
     ).resolves.toEqual({
-      safe: true,
+      donation_id: 'donation-2',
+      decision: 'HOLD',
+      risk_score: 47,
+      matched_keywords: ['brand_pluto88'],
+      ai_confidence: 0.71,
+      execution_path: 'Layer-1-AI',
+      reason: 'Terdeteksi indikator berisiko: brand_pluto88',
     });
+  });
+
+  it('throws ServiceUnavailableException when the risk engine fails', async () => {
+    fetchMock.mockRejectedValue(new Error('connect ECONNREFUSED'));
+
+    await expect(
+      service.moderateDonation({
+        donation_id: 'donation-3',
+        raw_text: 'halo',
+      }),
+    ).rejects.toThrow(ServiceUnavailableException);
   });
 });

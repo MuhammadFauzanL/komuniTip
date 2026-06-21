@@ -90,8 +90,12 @@ model Donation {
   paid_at             DateTime?
 
   // AI Moderation fields
-  ai_status           String?   @db.VarChar(20)   // SAFE, BLOCKED
-  ai_reason           String?   @db.Text           // Alasan jika diblokir AI
+  ai_status           String?   @db.VarChar(20)   // CLEAR, HOLD, BLOCK
+  ai_reason           String?   @db.Text
+  ai_risk_score       Int?
+  ai_confidence       Float?
+  ai_execution_path   String?   @db.VarChar(50)
+  ai_matched_keywords String[]
 
   createdAt           DateTime  @default(now())
 

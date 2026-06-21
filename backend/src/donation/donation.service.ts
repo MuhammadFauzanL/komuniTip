@@ -1,4 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiModerationService } from '../ai/ai-moderation.service';
 import { CreateDonationDto } from './dto/create-donation.dto';
@@ -68,37 +75,78 @@ export class DonationService {
       throw new NotFoundException('Kreator tidak ditemukan');
     }
 
+    const donationId = randomUUID();
+
     // 2. AI Moderation — cek nama dan pesan
     this.logger.log(`🔍 Moderating donation for streamer "${username}" from "${dto.nama_donatur}"`);
     
-    const moderationResult = await this.aiModeration.moderateText(
-      dto.nama_donatur,
-      dto.pesan || '',
-    );
+    let moderationResult;
+    try {
+      moderationResult = await this.aiModeration.moderateDonation({
+        donation_id: donationId,
+        raw_text: `${dto.nama_donatur}\n${dto.pesan || ''}`.trim(),
+        amount: dto.jumlah,
+        is_round_amount: Number(dto.jumlah) % 1000 === 0,
+        donor_messages_last_10min: 1,
+      });
+    } catch (error) {
+      this.logger.error(
+        `AI moderation unavailable for "${dto.nama_donatur}": ${error instanceof Error ? error.message : error}`,
+      );
 
-    // 3. Jika BLOCKED — simpan record, tapi tolak donasi
-    if (!moderationResult.safe) {
+      const heldDonation = await this.createModeratedDonation(donationId, streamer.id, dto, {
+        status: 'HOLD',
+        ai_status: 'HOLD',
+        ai_reason: 'AI moderation service unavailable. Donation held for manual review.',
+      });
+
+      throw new ServiceUnavailableException({
+        held: true,
+        donation_id: heldDonation.id,
+        reason: 'Moderasi AI sedang tidak tersedia. Donasi ditahan untuk review manual.',
+      });
+    }
+
+    if (moderationResult.decision === 'BLOCK') {
       this.logger.warn(
         `🚫 Donation BLOCKED: "${dto.nama_donatur}" → "${dto.pesan}" | Reason: ${moderationResult.reason}`,
       );
 
-      // Simpan ke database untuk audit trail (status: BLOCKED)
-      await this.prisma.donation.create({
-        data: {
-          streamerId: streamer.id,
-          nama_donatur: dto.nama_donatur,
-          email_donatur: dto.email_donatur,
-          pesan: dto.pesan,
-          jumlah: dto.jumlah,
-          status: 'BLOCKED',
-          ai_status: 'BLOCKED',
-          ai_reason: moderationResult.reason || 'Konten terdeteksi tidak pantas',
-        },
+      await this.createModeratedDonation(donationId, streamer.id, dto, {
+        status: 'BLOCKED',
+        ai_status: 'BLOCK',
+        ai_reason: moderationResult.reason || 'Konten terdeteksi tidak pantas',
+        ai_risk_score: moderationResult.risk_score,
+        ai_confidence: moderationResult.ai_confidence,
+        ai_execution_path: moderationResult.execution_path,
+        ai_matched_keywords: moderationResult.matched_keywords,
       });
 
       throw new BadRequestException({
         blocked: true,
-        reason: moderationResult.reason || 'Pesan Anda mengandung konten yang tidak diizinkan.',
+        reason: 'Pesan mengandung konten yang tidak sesuai dengan kebijakan platform.',
+      });
+    }
+
+    if (moderationResult.decision === 'HOLD') {
+      this.logger.warn(
+        `⏸️ Donation HELD: "${dto.nama_donatur}" → "${dto.pesan}" | Reason: ${moderationResult.reason}`,
+      );
+
+      const heldDonation = await this.createModeratedDonation(donationId, streamer.id, dto, {
+        status: 'HOLD',
+        ai_status: 'HOLD',
+        ai_reason: moderationResult.reason || 'Pesan ditahan untuk review manual.',
+        ai_risk_score: moderationResult.risk_score,
+        ai_confidence: moderationResult.ai_confidence,
+        ai_execution_path: moderationResult.execution_path,
+        ai_matched_keywords: moderationResult.matched_keywords,
+      });
+
+      throw new BadRequestException({
+        held: true,
+        donation_id: heldDonation.id,
+        reason: moderationResult.reason || 'Pesan ditahan untuk review manual.',
       });
     }
 
@@ -107,13 +155,19 @@ export class DonationService {
 
     const donation = await this.prisma.donation.create({
       data: {
+        id: donationId,
         streamerId: streamer.id,
         nama_donatur: dto.nama_donatur,
         email_donatur: dto.email_donatur,
         pesan: dto.pesan,
         jumlah: dto.jumlah,
         status: 'PENDING',
-        ai_status: 'SAFE',
+        ai_status: 'CLEAR',
+        ai_reason: null,
+        ai_risk_score: moderationResult.risk_score,
+        ai_confidence: moderationResult.ai_confidence,
+        ai_execution_path: moderationResult.execution_path,
+        ai_matched_keywords: moderationResult.matched_keywords,
       },
     });
 
@@ -196,7 +250,7 @@ export class DonationService {
         _sum: { jumlah: true },
       }),
       this.prisma.donation.count({
-        where: { streamerId: userId, ai_status: 'BLOCKED' },
+        where: { streamerId: userId, ai_status: 'BLOCK' },
       }),
     ]);
 
@@ -205,5 +259,32 @@ export class DonationService {
       total_pendapatan: totalPendapatan._sum.jumlah || 0,
       total_diblokir_ai: totalDiblokir,
     };
+  }
+
+  private createModeratedDonation(
+    donationId: string,
+    streamerId: string,
+    dto: CreateDonationDto,
+    moderationData: {
+      status: string;
+      ai_status: string;
+      ai_reason: string;
+      ai_risk_score?: number;
+      ai_confidence?: number;
+      ai_execution_path?: string;
+      ai_matched_keywords?: string[];
+    },
+  ) {
+    return this.prisma.donation.create({
+      data: {
+        id: donationId,
+        streamerId,
+        nama_donatur: dto.nama_donatur,
+        email_donatur: dto.email_donatur,
+        pesan: dto.pesan,
+        jumlah: dto.jumlah,
+        ...moderationData,
+      },
+    });
   }
 }

@@ -33,7 +33,7 @@ Sistem tidak akan bisa menyala jika kamu belum mengisi kunci rahasia *(Secret Ke
 3. **Isi Nilai-Nilainya**:
    - **Database**: Ubah `DB_USER` dan `DB_PASSWORD` sesuka hatimu (contoh: ubah jadi `root` dan `komunitipDB`). Jangan ubah `DB_NAME`.
    - **Google OAuth**: Masukkan API *Client ID* & *Secret*-mu dari [Google Cloud Platform](https://console.cloud.google.com/). Ini wajib, tanpa ini siapapun tidak bisa daftar!
-   - **AI Moderation (Gemini)**: Masukkan API Key gratis dari [Google AI Studio](https://aistudio.google.com/app/apikey).
+   - **AI Moderation (Risk Engine)**: Isi `AI_MODERATION_API_KEY` dengan shared secret yang sama untuk backend NestJS dan service FastAPI.
    - **Xendit (Payment Gateway)**: Daftar [Xendit Dashboard](https://dashboard.xendit.co/) → *Developers* → *API Keys*. Buat *Secret Key* baru (TEST/Sandbox) dan taruh di sini. Begitu juga dengan *Webhook Token*-nya untuk pengujian saldo masuk.
 
 ### Langkah 3: Bangun dan Jalankan Kontainer (Docker Compose)
@@ -77,9 +77,10 @@ Buat berjaga-jaga jika teman/layanmu mengalami masalah saat nge-*clone*:
 2. **Saldo Donasi Nggak Masuk? Webhook Stuck!**
    - **Alasan**: Server Xendit dari luar angkasa/internet gak bisa nembak domain `http://localhost` di komputermu!
    - **Penyelesaian**: Pastikan saat testing pembayaran, kamu pakai aplikasi *Tunel* **[Ngrok](https://ngrok.com/)**. Jalankan perintah `ngrok http 3000` di terminal lain, lalu paste link Ngrok-nya di *Webhooks > Invoices Paid* pada Dashboard Xenditmu.
-3. **Pesan Donasi Gagal Karena Error 400 (Bad Request)**
+3. **Pesan Donasi Gagal Karena Error 400 / 503**
    - Periksa konsol backend: `docker compose logs -f backend-api`.
-   - Kemungkinan **Gemini API Key**-mu limit / sudah habis kuota harian *(429 Too Many Requests)*. Ganti dengan *API Key* Google Cloud AI Google-mu yang baru.
+   - Periksa juga service AI: `docker compose logs -f ai-risk-engine`.
+   - Pastikan `AI_MODERATION_API_KEY` sama di backend dan FastAPI, serta health check `http://localhost:8000/` mengembalikan `{"status":"ok","ai_loaded":true}`.
 
 ---
 *© 2026 KomuniTip Build - Dioptimasi bersama AI.*

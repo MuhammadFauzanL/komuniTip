@@ -4,6 +4,8 @@
 
 # Dependencies
 **/node_modules
+venv/
+.venv/
 
 # Build output
 **/dist
@@ -45,6 +47,7 @@ Thumbs.db
 # Python AI Specific
 __pycache__/
 models/
+risk-engine/*.onnx
 kaggle_training_pipeline.py
 convert_to_onnx.py
 continuous_learning_pipeline.py

@@ -202,7 +202,7 @@ const submitDonation = async () => {
   } catch (err) {
     if (err.details?.blocked) {
       aiBlocked.value = true
-      blockReason.value = err.details.reason || 'Pesan mengandung konten yang tidak diizinkan.'
+      blockReason.value = 'Pesan mengandung konten yang tidak sesuai dengan kebijakan platform.'
       return
     }
 

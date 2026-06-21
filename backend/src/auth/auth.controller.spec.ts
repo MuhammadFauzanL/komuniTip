@@ -12,6 +12,7 @@ describe('AuthController', () => {
     recordFailure: jest.Mock;
     reset: jest.Mock;
   };
+  const mockRequest = { ip: '127.0.0.1', headers: {} } as any;
 
   beforeEach(async () => {
     authService = {
@@ -50,7 +51,7 @@ describe('AuthController', () => {
     await expect(
       controller.login(
         { identifier: 'budi@example.com', password: 'wrong' },
-        { ip: '127.0.0.1', headers: {} },
+        mockRequest,
       ),
     ).rejects.toThrow(UnauthorizedException);
 
@@ -70,7 +71,7 @@ describe('AuthController', () => {
 
     await controller.login(
       { identifier: 'budi@example.com', password: 'correct' },
-      { ip: '127.0.0.1', headers: {} },
+      mockRequest,
     );
 
     expect(loginAttemptService.reset).toHaveBeenCalledWith('budi@example.com', '127.0.0.1');

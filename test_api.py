@@ -2,7 +2,7 @@ import requests
 import json
 import os
 
-url = "http://127.0.0.1:8000/v1/evaluate"
+url = os.getenv("AI_MODERATION_URL", "http://127.0.0.1:8000") + "/v1/evaluate"
 api_key = os.getenv("API_KEY", "rahasia-komunitip-123")
 headers = {"X-API-Key": api_key}
 
