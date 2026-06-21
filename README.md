@@ -15,41 +15,43 @@ Sebelum mulai, pastikan spesifikasi komputermu sudah terpasang program berikut:
 
 ## 🚀 Instalasi Langkah demi Langkah (Step by Step)
 
+Berikut adalah panduan detail untuk menjalankan KomuniTip di komputer Anda dari nol:
+
 ### Langkah 1: Clone Repositori
-Buka terminal dan unduh kodenya.
+Buka terminal/CMD Anda, lalu unduh source code dari GitHub menggunakan perintah berikut:
 ```bash
 git clone https://github.com/MuhammadFauzanL/komuniTip.git
 cd komunitip
 ```
 
-### Langkah 2: Buat File `.env` (PENTING!)
-Sistem tidak akan bisa menyala jika kamu belum mengisi kunci rahasia *(Secret Keys)*-nya.
+### Langkah 2: Konfigurasi File Environment (.env)
+Aplikasi membutuhkan konfigurasi rahasia seperti akses database, kunci API Google, dan Xendit. Anda harus membuat file `.env` sebelum menjalankan aplikasi.
 
-1. Di dalam *folder* utama aplikasi, salin file contoh *environment* (agar terbaca oleh Docker):
+1. Salin file contoh konfigurasi yang sudah disediakan:
    ```bash
    cp .env.example .env
    ```
-2. Buka file `.env` kamu menggunakan *Code Editor* kesayanganmu (VSCode).
-3. **Isi Nilai-Nilainya**:
-   - **Database**: Ubah `DB_USER` dan `DB_PASSWORD` sesuka hatimu (contoh: ubah jadi `root` dan `komunitipDB`). Jangan ubah `DB_NAME`.
-   - **Google OAuth**: Masukkan API *Client ID* & *Secret*-mu dari [Google Cloud Platform](https://console.cloud.google.com/). Ini wajib, tanpa ini siapapun tidak bisa daftar!
-   - **AI Moderation (Risk Engine)**: Isi `AI_MODERATION_API_KEY` dengan shared secret yang sama untuk backend NestJS dan service FastAPI.
-   - **Xendit (Payment Gateway)**: Daftar [Xendit Dashboard](https://dashboard.xendit.co/) → *Developers* → *API Keys*. Buat *Secret Key* baru (TEST/Sandbox) dan taruh di sini. Begitu juga dengan *Webhook Token*-nya untuk pengujian saldo masuk.
+   *(Catatan untuk Windows: Jika `cp` tidak berfungsi, copy file `.env.example` secara manual di File Explorer, lalu *paste* dan ganti namanya menjadi `.env`)*
+2. Buka file `.env` yang baru saja dibuat menggunakan *Code Editor* Anda (misal: VSCode).
+3. **Lengkapi variabel-variabel penting berikut:**
+   - **Database (`DB_USER`, `DB_PASSWORD`)**: Biarkan default, atau ubah *password*-nya jika Anda ingin. Docker akan otomatis membaca ini untuk membangkitkan server PostgreSQL.
+   - **Google OAuth**: Isi `GOOGLE_CLIENT_ID` dan `GOOGLE_CLIENT_SECRET` (Dapatkan dari Google Cloud Console). Tanpa ini, fitur Login/Register tidak akan berfungsi.
+   - **Xendit (Payment)**: Isi `XENDIT_SECRET_KEY` dan `XENDIT_WEBHOOK_TOKEN`. Anda bisa mendapatkannya secara gratis dengan mendaftar di Dashboard Xendit (mode Test).
+   - **AI Risk Engine**: Pastikan `AI_MODERATION_API_KEY` terisi dengan sembarang *password* rahasia (contoh: `my_super_secret_ai_key`). Kunci ini digunakan untuk mengamankan koneksi antara Backend dan Microservice AI.
 
-### Langkah 3: Bangun dan Jalankan Kontainer (Docker Compose)
-Setelah `.env` diisi, biarkan Docker bekerja mengunduh *image* Linux, Node.JS, Vue, dan Postgres. 
-Jalankan perintah ini di *password* utama terminal:
+### Langkah 3: Menjalankan Aplikasi (Docker Compose)
+Pastikan aplikasi **Docker Desktop** Anda sudah terbuka dan berjalan *(running)*. Kemudian, jalankan perintah sakti ini di terminal Anda:
 ```bash
 docker compose up --build -d
 ```
-> *(Catatan: Tambahan flag `-d` itu artinya `detached`. Docker akan berjalan diam-diam di balik layar tanpa mengunci terminal-mu). Pembangunan ini akan memakan waktu 3-5 menit bergantung pada kecepatan internet internetmu.*
+> **Catatan:** Perintah ini akan otomatis mengunduh PostgreSQL, Node.js (Frontend & Backend), Python (AI Risk Engine), beserta seluruh *dependencies*-nya (`npm install` & `pip install`). Anda cukup santai menunggu 3-10 menit tergantung kecepatan internet. Flag `-d` (*detached*) membuat aplikasi berjalan mulus di latar belakang.
 
-### Langkah 4: Migrasi Skema Database & Sinkronisasi
-Database PostgreSQL milikmu saat ini "masih kosong", belum berbentuk. Kamu harus "mengirim" rancangan desain database (Schema Prisma) ke dalam server tersebut.
+### Langkah 4: Migrasi Struktur Database (Prisma)
+Setelah semua *container* Docker menyala, database PostgreSQL Anda sebenarnya masih kosong tanpa tabel satupun. Anda wajib melakukan migrasi untuk membentuk tabel User, Donasi, dll:
 ```bash
 docker exec -it komunitip-backend npx prisma migrate dev --name init
 ```
-*Tunggu hingga terminal mengatakan: **"migration ran successfully"***. Maka saldo, user, dan donasi sudah memiliki tempatnya!
+Tunggu beberapa saat. Jika terminal menampilkan pesan **"migration ran successfully"**, selamat! Aplikasi KomuniTip kini sudah siap digunakan secara utuh.
 
 ---
 

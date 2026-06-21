@@ -7,7 +7,8 @@ import RegisterView from '../components/RegisterView.vue'
 import ForgotPasswordView from '../components/ForgotPasswordView.vue'
 import ResetPasswordView from '../components/ResetPasswordView.vue'
 import DashboardView from '../components/DashboardView.vue'
-import ProfileView from '../components/ProfileView.vue'
+import WalletView from '../components/WalletView.vue'
+import SettingsView from '../components/SettingsView.vue'
 import OverlayView from '../components/OverlayView.vue'
 import OnboardingUsernameStep from '../components/OnboardingUsernameStep.vue'
 import DonateView from '../components/DonateView.vue'
@@ -57,10 +58,20 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/profile',
-    name: 'profile',
-    component: ProfileView,
+    path: '/wallet',
+    name: 'wallet',
+    component: WalletView,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: SettingsView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    redirect: '/settings'
   },
   {
     path: '/overlay',
