@@ -77,10 +77,12 @@ const handleLogout = () => {
 }
 
 const copyLink = () => {
-  const link = `komunitip.id/${user.value?.username || 'username'}`
+  const link = `${window.location.host}/${user.value?.username || 'username'}`
   navigator.clipboard.writeText(link)
   alert('Link tersalin: ' + link)
 }
+
+const appDomain = window.location.host
 
 const handleGoToProfile = () => {
   router.push('/settings')
@@ -335,7 +337,7 @@ onBeforeUnmount(() => {
           <div class="min-w-0">
             <p class="truncate text-base font-bold text-slate-100">{{ user?.nama_lengkap?.split(' ')[0] || 'Kreator' }}</p>
             <p class="text-xs font-bold text-[#51a2ff]">
-              {{ user?.role === 'ADMIN' ? 'Admin' : 'Kreator Pro' }}
+              {{ user?.role === 'ADMIN' ? 'Admin' : 'Kreator' }}
             </p>
           </div>
         </div>
@@ -445,7 +447,7 @@ onBeforeUnmount(() => {
             <div class="absolute left-[-80px] top-[120px] h-[250px] w-[390px] rounded-full bg-[rgba(97,95,255,0.2)] blur-[60px]" />
             <div class="absolute right-[20%] top-[-120px] h-[380px] w-[630px] rounded-full bg-[rgba(43,127,255,0.2)] blur-[80px]" />
 
-            <div class="relative flex flex-col gap-8 px-8 py-8 lg:flex-row lg:items-end lg:justify-between">
+            <div class="relative flex flex-col gap-8 px-8 py-8 lg:flex-row lg:items-center lg:justify-between">
               <div class="max-w-[420px]">
                 <div class="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-[#bedbff]">
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -458,25 +460,9 @@ onBeforeUnmount(() => {
                   {{ formatCurrency(stats.total_pendapatan || user?.saldo_aktif || 0) }}
                 </div>
 
-                <div class="mt-5 flex flex-wrap items-center gap-3">
-                  <div class="inline-flex items-center gap-1 rounded-full border border-[rgba(0,212,146,0.3)] bg-[rgba(0,188,125,0.2)] px-3 py-1.5 text-sm font-bold text-[#5ee9b5]">
-                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                    </svg>
-                    <span>+18.4%</span>
-                  </div>
-                  <span class="text-sm font-bold text-[#bedbff]">vs bulan lalu</span>
-                </div>
               </div>
 
-              <div class="flex items-end justify-between gap-4 lg:w-[300px]">
-                <div class="inline-flex rounded-2xl border border-[rgba(49,65,88,0.5)] bg-[rgba(15,23,43,0.4)] p-1 shadow-[4px_4px_0px_#020617]">
-                  <button class="rounded-[14px] border border-[#314158] bg-[#1d293d] px-5 py-2 text-base font-bold text-[#51a2ff]">
-                    Bulan
-                  </button>
-                  <button class="px-5 py-2 text-base font-bold text-[#cad5e2]">Tahun</button>
-                </div>
-
+              <div class="flex items-center justify-end gap-4 lg:w-[300px]">
                 <img
                   :src="WizardMascot"
                   alt="Wizard Mascot"
@@ -508,9 +494,6 @@ onBeforeUnmount(() => {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                       </svg>
                     </div>
-                    <div class="rounded-full border border-[rgba(0,153,102,0.5)] bg-[rgba(0,79,59,0.4)] px-4 py-1.5 text-sm font-bold text-[#00d492]">
-                      Aktif
-                    </div>
                   </div>
 
                   <h3 class="mt-8 text-[24px] font-bold text-slate-100">My Page</h3>
@@ -520,7 +503,7 @@ onBeforeUnmount(() => {
                   <div class="mt-8 flex gap-3">
                     <div class="flex min-h-[60px] flex-1 items-center justify-between rounded-2xl border border-[#314158] bg-[#0f172b] px-4 shadow-[2px_2px_0px_#020617]">
                       <span class="truncate text-sm font-bold text-[#cad5e2]">
-                        komunitip.id/{{ user?.username || 'username' }}
+                        {{ appDomain }}/{{ user?.username || 'username' }}
                       </span>
                       <button class="text-[#62748e] transition hover:text-white" @click="copyLink">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -551,9 +534,6 @@ onBeforeUnmount(() => {
                         <circle cx="12" cy="12" r="2" fill="currentColor" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.24 7.76a6 6 0 0 1 0 8.49m2.83-11.32a10 10 0 0 1 0 14.14M7.76 16.24a6 6 0 0 1 0-8.49m-2.83 11.32a10 10 0 0 1 0-14.14" />
                       </svg>
-                    </div>
-                    <div class="rounded-full border border-[#7e22ce] bg-[rgba(126,34,206,0.25)] px-4 py-1.5 text-sm font-bold text-[#d8b4fe]">
-                      Baru
                     </div>
                   </div>
 
@@ -613,8 +593,8 @@ onBeforeUnmount(() => {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4M8 16l-4-4 4-4" />
                   </svg>
                 </div>
-                <h3 class="mt-4 text-lg font-bold text-slate-100">Belum ada data pada filter ini</h3>
-                <p class="mt-2 text-sm text-[#7a8ba8]">Coba ganti filter atau lakukan donasi uji untuk memperlihatkan alur yang ingin Anda demokan.</p>
+                <h3 class="mt-4 text-lg font-bold text-slate-100">Belum ada riwayat dukungan</h3>
+                <p class="mt-2 text-sm text-[#7a8ba8]">Bagikan link My Page Anda untuk mulai menerima donasi.</p>
               </div>
 
               <div v-else class="flex flex-col">
@@ -696,7 +676,7 @@ onBeforeUnmount(() => {
               <div>
                 <h2 class="text-[22px] font-bold text-slate-100">Alat Operasional</h2>
                 <p class="mt-1 text-sm font-medium text-[#90a1b9]">
-                  Section ini tetap mempertahankan fitur wallet, withdraw, dan moderasi untuk kebutuhan operasional.
+                  Pantau statistik moderasi AI, saldo, dan ajukan penarikan dana.
                 </p>
               </div>
             </div>
@@ -744,7 +724,7 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div v-if="blockedDonations.length === 0" class="rounded-2xl border border-[#1f2b45] bg-[#0d1323] p-5 text-sm text-[#7a8ba8]">
-                  Belum ada pesan yang diblokir AI. Trigger satu contoh dari form donasi jika ingin mendemokan moderasi.
+                  Belum ada pesan yang diblokir oleh AI Moderasi.
                 </div>
 
                 <div v-else class="space-y-3">
@@ -773,9 +753,6 @@ onBeforeUnmount(() => {
                     <h3 class="text-xl font-bold text-slate-100">Wallet & Withdraw</h3>
                     <p class="mt-1 text-sm text-[#90a1b9]">Saldo aktif, saldo tertahan, dan request payout.</p>
                   </div>
-                  <div class="rounded-full border border-[#1d3d2f] bg-[#0b1f16] px-3 py-1 text-[12px] font-bold text-emerald-300">
-                    MVP Siap Demo
-                  </div>
                 </div>
 
                 <div class="mb-6 grid gap-4 md:grid-cols-2">
@@ -798,7 +775,6 @@ onBeforeUnmount(() => {
                       <h4 class="text-lg font-bold text-white">Ajukan Withdraw Baru</h4>
                       <p class="mt-1 text-[13px] text-[#7a8ba8]">Minimum withdraw Rp50.000. Request akan dipindahkan ke saldo tertahan.</p>
                     </div>
-                    <div class="rounded-full bg-blue-500/10 px-3 py-1 text-[12px] font-semibold text-blue-300">Manual Review</div>
                   </div>
 
                   <div v-if="withdrawalError" class="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
@@ -897,7 +873,7 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div v-else-if="withdrawals.length === 0" class="rounded-2xl border border-[#1f2b45] bg-[#0d1323] p-5 text-sm text-[#7a8ba8]">
-                  Belum ada request withdraw. Buat satu request agar client bisa melihat alur payout dari sisi streamer.
+                  Belum ada request withdraw. Saldo yang ditarik akan muncul di sini.
                 </div>
 
                 <div v-else class="space-y-3">

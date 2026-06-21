@@ -343,19 +343,36 @@ onBeforeUnmount(() => {
 
       <main class="mx-auto max-w-[1152px] px-6 pb-14 pt-2">
         <div v-if="loading" class="flex min-h-[60vh] items-center justify-center">
-          <div class="rounded-[32px] border border-[#314158] bg-[rgba(15,23,43,0.75)] px-10 py-10 text-center shadow-[8px_8px_0px_0px_#020617]">
-            <div class="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#314158] border-t-[#51a2ff]" />
-            <p class="mt-4 text-sm font-medium text-[#90a1b9]">Memuat halaman...</p>
+          <div class="rounded-[32px] border border-[#314158] bg-[#0f172b] px-12 py-12 text-center shadow-[6px_6px_0px_#020617]">
+            <div class="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-[#1d293d] border-t-[#51a2ff]" />
+            <p class="mt-5 text-sm font-bold text-[#90a1b9]">Memuat halaman kreator...</p>
           </div>
         </div>
 
         <div v-else-if="notFound" class="flex min-h-[60vh] items-center justify-center">
-          <div class="max-w-xl rounded-[32px] border border-[#314158] bg-[rgba(15,23,43,0.75)] px-10 py-10 text-center shadow-[8px_8px_0px_0px_#020617]">
-            <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[rgba(255,32,86,0.1)] text-4xl">😔</div>
-            <h2 class="mt-6 text-3xl font-bold text-slate-100">Kreator Tidak Ditemukan</h2>
-            <p class="mt-3 text-base text-[#90a1b9]">
-              Username <strong class="text-slate-100">{{ username }}</strong> tidak terdaftar di KomuniTip.
-            </p>
+          <div class="relative w-full max-w-lg overflow-hidden rounded-[40px] border border-[#314158] bg-[#0f172b] px-10 py-12 text-center shadow-[6px_6px_0px_#020617]">
+            <div class="absolute left-[-50px] top-[-50px] h-[200px] w-[200px] rounded-full bg-[rgba(255,32,86,0.15)] blur-[50px]" />
+            <div class="absolute bottom-[-50px] right-[-50px] h-[200px] w-[200px] rounded-full bg-[rgba(43,127,255,0.1)] blur-[50px]" />
+
+            <div class="relative z-10 flex flex-col items-center">
+              <img :src="SittingMascot" alt="Kreator Tidak Ditemukan" class="mb-6 h-48 w-auto object-contain drop-shadow-[0_12px_20px_rgba(0,0,0,0.4)]" />
+              
+              <div class="inline-flex items-center gap-2 rounded-full border border-[rgba(236,0,63,0.5)] bg-[rgba(139,8,54,0.3)] px-4 py-1.5 text-sm font-bold text-[#ff637e]">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M4.93 19h14.14c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.2 16c-.77 1.33.19 3 1.73 3z" />
+                </svg>
+                <span>Halaman Tidak Ditemukan</span>
+              </div>
+
+              <h2 class="mt-6 text-[30px] font-bold leading-tight tracking-tight text-slate-100">Kreator <span class="text-[#ffb900]">Tidak</span> Ditemukan</h2>
+              <p class="mt-4 max-w-[320px] text-base font-medium text-[#90a1b9]">
+                Username <strong class="text-[#51a2ff]">{{ username }}</strong> tidak terdaftar. Periksa kembali link yang Anda buka.
+              </p>
+
+              <RouterLink to="/" class="mt-8 flex h-[51px] w-full max-w-[240px] items-center justify-center gap-2 rounded-2xl border border-[#2b7fff] bg-[#155dfc] px-5 text-sm font-bold text-white shadow-[4px_4px_0px_#1e3a8a] transition hover:scale-[1.02]">
+                Kembali ke Beranda
+              </RouterLink>
+            </div>
           </div>
         </div>
 
