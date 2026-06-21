@@ -5,6 +5,7 @@ import api from '../services/api'
 import StandingMascot from '../assets/Image_(Cowboy Mascot).png'
 import SittingMascot from '../assets/Image_(Sitting Cowboy Mascot).png'
 import TopHatMascot from '../assets/Image_(Top Hat Mascot).png'
+import WizardMascot from '../assets/Image_(Wizard Mascot).png'
 import GroupPenguins from '../assets/Image_(Group of Penguins).png'
 import IconBabi from '../assets/Icon_babi.png'
 import IconKucing from '../assets/Icon_kucing.png'
@@ -69,7 +70,10 @@ const formatCompactRupiah = (amount) => {
 const fetchPaymentStatus = async (donationId) => {
   const { data } = await api.get(`/payment/status/${donationId}`)
   paymentStatus.value = data.data
+  const currentSummary = paymentSummary.value || {}
   paymentSummary.value = {
+    ...currentSummary,
+    donation_id: data.data.donation_id || donationId,
     nama_donatur: data.data.donor_name,
     jumlah: data.data.amount,
   }
@@ -194,7 +198,9 @@ const submitDonation = async () => {
     }
 
     paymentSummary.value = {
+      donation_id: data.data?.payment?.donation_id,
       nama_donatur: form.value.nama_donatur,
+      email_donatur: form.value.email_donatur,
       jumlah: form.value.jumlah,
     }
     sessionStorage.setItem(storageKey, JSON.stringify(paymentSummary.value))
@@ -237,6 +243,11 @@ const isFormValid = computed(() => {
 const messageLength = computed(() => form.value.pesan?.length || 0)
 const displayName = computed(() => streamer.value?.nama_lengkap || 'Streamer')
 const publicUsername = computed(() => streamer.value?.username || username)
+const transactionId = computed(() => {
+  const queryDonationId = Array.isArray(route.query.donation_id) ? route.query.donation_id[0] : route.query.donation_id
+  return queryDonationId || paymentStatus.value?.donation_id || paymentSummary.value?.donation_id || '-'
+})
+const receiptEmail = computed(() => paymentSummary.value?.email_donatur || '')
 const creatorCategory = computed(() => streamer.value?.kategori || 'Gaming & Streaming')
 const creatorBio = computed(
   () =>
@@ -441,33 +452,72 @@ onBeforeUnmount(() => {
 
             <section>
               <div class="rounded-[32px] border border-[#314158] bg-[rgba(15,23,43,0.75)] px-8 py-10 shadow-[8px_8px_0px_0px_#020617]">
-                <div v-if="success" class="space-y-6">
-                  <div class="text-center">
-                    <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[rgba(0,188,125,0.12)] text-4xl">🎉</div>
-                    <h2 class="mt-5 text-4xl font-bold text-slate-100">Pembayaran Diterima!</h2>
-                    <p v-if="paymentSummary?.nama_donatur" class="mt-3 text-lg text-[#cad5e2]">
-                      Terima kasih <strong class="text-white">{{ paymentSummary.nama_donatur }}</strong>!
-                    </p>
-                    <p v-if="paymentSummary?.jumlah" class="mt-1 text-base text-[#90a1b9]">
-                      Donasi sebesar <strong class="text-white">{{ formatRupiah(paymentSummary.jumlah) }}</strong> sedang diproses.
-                    </p>
-                    <p v-else class="mt-1 text-base text-[#90a1b9]">Donasi kamu sedang diproses.</p>
+                <div v-if="success" class="mx-auto flex min-h-[694px] max-w-[655px] flex-col items-center justify-center py-4 text-center">
+                  <div class="relative">
+                    <div class="absolute inset-0 rounded-full bg-[#00bc7d] opacity-25 blur-[64px]" />
+                    <div
+                      class="relative flex h-48 w-48 items-center justify-center overflow-hidden rounded-full border-[6px] border-[#00bc7d] bg-[#1d293d] pt-8 shadow-[0_0_30px_rgba(16,185,129,0.3)]"
+                    >
+                      <img :src="WizardMascot" alt="Success mascot" class="h-36 w-36 object-contain" />
+                    </div>
+                    <div
+                      class="absolute -bottom-2 -right-3 flex h-16 w-16 items-center justify-center rounded-full border-[6px] border-[#0f172b] bg-[#00bc7d] text-white"
+                      aria-hidden="true"
+                    >
+                      <svg class="h-9 w-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5" />
+                      </svg>
+                    </div>
                   </div>
 
-                  <div class="rounded-2xl border border-[rgba(0,188,125,0.3)] bg-[rgba(0,79,59,0.1)] px-5 py-4 text-sm text-[#b8ffe0]">
-                    {{ paymentNotice || 'Donasi kamu sedang diverifikasi oleh sistem.' }}
+                  <h2 class="mt-10 text-[30px] font-black leading-9 text-slate-100 sm:text-[34px]">Terima Kasih!</h2>
+                  <p class="mt-3 max-w-md text-lg font-medium leading-[1.65] text-[#90a1b9]">
+                    <template v-if="paymentSummary?.jumlah">
+                      Dukungan kamu sebesar
+                      <strong class="font-bold text-[#00d492]">{{ formatRupiah(paymentSummary.jumlah) }}</strong>
+                      untuk
+                      <strong class="font-bold text-[#e2e8f0]">{{ displayName }}</strong>
+                      sudah diterima.
+                    </template>
+                    <template v-else>
+                      Dukungan kamu untuk
+                      <strong class="font-bold text-[#e2e8f0]">{{ displayName }}</strong>
+                      sudah diterima.
+                    </template>
+                  </p>
+
+                  <div class="mt-7 w-full max-w-sm rounded-2xl border border-[#314158] bg-[#1d293d] px-6 py-6">
+                    <div class="border-b border-[#314158] pb-4">
+                      <p class="text-xs font-medium text-[#62748e]">ID Transaksi</p>
+                      <p class="mt-2 break-all text-lg font-bold leading-7 text-[#e2e8f0]">{{ transactionId }}</p>
+                    </div>
+                    <p v-if="receiptEmail" class="pt-4 text-xs font-medium leading-4 text-[#90a1b9]">
+                      Receipt dikirim ke <strong class="font-bold text-[#cad5e2]">{{ receiptEmail }}</strong>
+                    </p>
+                    <p v-else class="pt-4 text-xs font-medium leading-4 text-[#90a1b9]">
+                      Simpan ID transaksi ini sebagai referensi pembayaran.
+                    </p>
                   </div>
 
-                  <div v-if="paymentStatus?.payment_method" class="text-sm text-[#90a1b9]">
+                  <p v-if="paymentStatus?.payment_method" class="mt-4 text-sm font-medium text-[#90a1b9]">
                     Metode pembayaran: <strong class="text-slate-100">{{ paymentStatus.payment_method }}</strong>
-                  </div>
+                  </p>
 
-                  <button
-                    class="inline-flex h-[56px] w-full items-center justify-center rounded-2xl border border-[#51a2ff] bg-[#155dfc] px-6 text-lg font-bold text-white shadow-[4px_4px_0px_#1e3a8a] transition hover:bg-[#1a64ff]"
-                    @click="resetForm"
-                  >
-                    Kirim Donasi Lagi
-                  </button>
+                  <div class="mt-8 grid w-full max-w-sm gap-4 sm:grid-cols-[1fr_150px]">
+                    <button
+                      type="button"
+                      class="inline-flex h-14 items-center justify-center rounded-2xl border border-[#51a2ff] bg-[#155dfc] px-6 text-base font-bold text-white shadow-[4px_4px_0px_#1e3a8a] transition hover:bg-[#1a64ff]"
+                      @click="resetForm"
+                    >
+                      Kirim Lagi
+                    </button>
+                    <RouterLink
+                      to="/register"
+                      class="inline-flex h-14 items-center justify-center rounded-2xl border border-[#45556c] bg-[#1d293d] px-5 text-center text-base font-bold leading-5 text-[#e2e8f0] shadow-[4px_4px_0px_#020617] transition hover:border-[#64748b]"
+                    >
+                      Daftar KomuniTip
+                    </RouterLink>
+                  </div>
                 </div>
 
                 <form v-else class="space-y-6" @submit.prevent="submitDonation">
