@@ -38,7 +38,7 @@ const withdrawalForm = ref({
 })
 
 const creatorName = computed(() => user.value?.nama_lengkap?.split(' ')[0] || user.value?.username || 'Kreator')
-const creatorTier = computed(() => user.value?.role === 'ADMIN' ? 'Admin' : 'Kreator Pro')
+const creatorTier = computed(() => user.value?.role === 'ADMIN' ? 'Admin' : 'Kreator')
 const availableBalance = computed(() => Number(balance.value.saldo_aktif || user.value?.saldo_aktif || 0))
 const heldBalance = computed(() => Number(balance.value.saldo_tertahan || user.value?.saldo_tertahan || 0))
 const pageLink = computed(() => (user.value?.username ? `${window.location.origin}/${user.value.username}` : window.location.origin))

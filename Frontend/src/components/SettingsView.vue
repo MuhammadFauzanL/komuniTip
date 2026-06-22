@@ -111,7 +111,7 @@ const twitter = ref(user.value?.twitter || '')
           <div class="min-w-0">
             <p class="truncate text-base font-bold text-slate-100">{{ user?.nama_lengkap?.split(' ')[0] || 'Kreator' }}</p>
             <p class="text-xs font-bold text-[#51a2ff]">
-              {{ user?.role === 'ADMIN' ? 'Admin' : 'Kreator Pro' }}
+              {{ user?.role === 'ADMIN' ? 'Admin' : 'Kreator' }}
             </p>
           </div>
         </div>
@@ -183,7 +183,7 @@ const twitter = ref(user.value?.twitter || '')
 
     <!-- MAIN CONTENT -->
     <main class="relative z-10 flex-1 h-screen overflow-y-auto px-10 py-8 scrollbar-hide">
-      
+
       <!-- Top header -->
       <div class="flex justify-between items-start mb-10 w-full">
         <div>
@@ -206,9 +206,9 @@ const twitter = ref(user.value?.twitter || '')
         <!-- LEFT COLUMN -->
         <div class="w-full lg:w-[320px] flex flex-col gap-8">
           <!-- Profile Card -->
-          <div class="rounded-[32px] p-8 flex flex-col items-center border border-[#212b42] shadow-2xl relative overflow-hidden" 
+          <div class="rounded-[32px] p-8 flex flex-col items-center border border-[#212b42] shadow-2xl relative overflow-hidden"
                style="background-color: #12192a;">
-            
+
             <div class="relative mb-6">
               <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-[#1c263e] shadow-2xl">
                 <img :src="ProfileImage" class="w-full h-full object-cover" />
@@ -282,7 +282,7 @@ const twitter = ref(user.value?.twitter || '')
                    </div>
                 </div>
              </div>
-             
+
              <!-- URL -->
              <div class="space-y-2 mb-6">
                 <label class="text-[13px] font-bold text-gray-400">Username (URL My Page)</label>

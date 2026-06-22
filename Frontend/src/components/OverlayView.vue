@@ -252,7 +252,7 @@ onMounted(loadSettings)
           <div class="min-w-0">
             <p class="truncate text-base font-bold text-slate-100">{{ user?.nama_lengkap?.split(' ')[0] || 'Kreator' }}</p>
             <p class="text-xs font-bold text-[#51a2ff]">
-              {{ user?.role === 'ADMIN' ? 'Admin' : 'Kreator Pro' }}
+              {{ user?.role === 'ADMIN' ? 'Admin' : 'Kreator' }}
             </p>
           </div>
         </div>
@@ -320,7 +320,7 @@ onMounted(loadSettings)
 
     <!-- MAIN CONTENT -->
     <main class="relative z-10 flex-1 h-screen overflow-y-auto px-6 py-8 scrollbar-hide lg:px-10">
-      
+
       <!-- Top header -->
       <div class="flex justify-between items-start mb-12 w-full relative z-30">
         <div>
@@ -586,7 +586,7 @@ onMounted(loadSettings)
                   <div class="h-5 w-9 rounded-full bg-[#314158] transition peer-checked:bg-emerald-500 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4" />
                 </label>
               </div>
-              
+
               <div class="mb-2">
                 <span class="text-[13px] font-bold text-white">Minimal donasi untuk TTS</span>
               </div>
@@ -631,7 +631,7 @@ onMounted(loadSettings)
                   <span class="rounded bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-bold text-blue-400 border border-blue-500/30">AI</span>
                 </div>
                 <p class="text-[13px] text-[#7a8ba8] mt-1 leading-relaxed max-w-3xl">
-                  Dengan mengaktifkan filter AI, setiap Nama dan Pesan Pendukung akan melalui proses pengecekan untuk memastikan tidak mengandung konten yang melanggar ketentuan. 
+                  Dengan mengaktifkan filter AI, setiap Nama dan Pesan Pendukung akan melalui proses pengecekan untuk memastikan tidak mengandung konten yang melanggar ketentuan.
                   <span class="text-white font-medium">(Catatan MVP: UI filter AI ini sudah dihubungkan dengan logic database).</span>
                 </p>
               </div>
