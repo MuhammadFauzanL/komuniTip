@@ -35,6 +35,55 @@ onUnmounted(() => {
 //TONG DIHAPUSSSS IEU NU PENTING
 const goToLogin = () => router.push('/login')
 const goToRegister = () => router.push('/register')
+
+const faqs = ref([
+  {
+    question: 'Apa itu KomuniTip?',
+    answer: 'KomuniTip adalah platform donasi dan dukungan finansial gratis bagi para kreator, streamer, gamer, dan pengembang di Indonesia untuk membantu mereka menerima apresiasi langsung dari penggemar secara mudah dan menyenangkan.',
+    open: false
+  },
+  {
+    question: 'Bagaimana cara menerima donasi?',
+    answer: 'Cukup daftarkan diri Anda, buat halaman profil unik Anda, dan sebarkan tautan profil Anda di media sosial atau pasang pada overlay live streaming Anda.',
+    open: false
+  },
+  {
+    question: 'Metode pembayaran apa saja yang didukung?',
+    answer: 'KomuniTip mendukung berbagai metode pembayaran populer di Indonesia seperti QRIS (Gopay, OVO, Dana, LinkAja, ShopeePay), Transfer Bank (BCA, Mandiri, BNI, BRI), dan Virtual Account.',
+    open: false
+  },
+  {
+    question: 'Apakah ada biaya layanan di KomuniTip?',
+    answer: 'Pendaftaran di KomuniTip 100% gratis. Kami hanya mengenakan biaya administrasi sangat rendah per transaksi untuk menutup biaya operasional gerbang pembayaran (payment gateway).',
+    open: false
+  }
+])
+
+const toggleFaq = (index) => {
+  faqs.value = faqs.value.map((faq, i) => {
+    if (i === index) {
+      return { ...faq, open: !faq.open }
+    }
+    return { ...faq, open: false }
+  })
+}
+
+const scrollToSection = (sectionId) => {
+  if (sectionId === 'top') {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } else {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      const offset = 100
+      const elementPosition = element.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.pageYOffset - offset
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      })
+    }
+  }
+}
 </script>
 
 <template>
@@ -75,9 +124,9 @@ const goToRegister = () => router.push('/register')
 
         <!-- Center Menu -->
         <div class="hidden md:flex items-center gap-8 text-[13px] font-semibold text-gray-400">
-          <a href="#" class="hover:text-white transition-colors">Home</a>
-          <a href="#" class="hover:text-white transition-colors">Kreator</a>
-          <a href="#" class="hover:text-white transition-colors">FAQ</a>
+          <button @click="scrollToSection('top')" class="hover:text-white transition-colors cursor-pointer bg-transparent border-none outline-none font-semibold">Home</button>
+          <button @click="scrollToSection('kreator-section')" class="hover:text-white transition-colors cursor-pointer bg-transparent border-none outline-none font-semibold">Kreator</button>
+          <button @click="scrollToSection('faq-section')" class="hover:text-white transition-colors cursor-pointer bg-transparent border-none outline-none font-semibold">FAQ</button>
         </div>
 
         <!-- Auth Buttons -->
@@ -303,7 +352,7 @@ const goToRegister = () => router.push('/register')
     </section>
 
     <!-- ───────── KREATOR TERPOPULER SECTION ───────── -->
-    <section class="max-w-5xl mx-auto px-6 pb-32 relative z-10">
+    <section id="kreator-section" class="max-w-5xl mx-auto px-6 pb-32 relative z-10">
       <div class="relative rounded-[36px] px-10 pt-14 pb-12 overflow-visible"
            style="background: #0d121f; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
         
@@ -387,6 +436,60 @@ const goToRegister = () => router.push('/register')
                   style="background: #2563eb; border: 2px solid #60a5fa; box-shadow: 3px 4px 0 #132a75;">
             Lihat Semua Kreator
           </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────── FAQ SECTION ───────── -->
+    <section id="faq-section" class="max-w-4xl mx-auto px-6 pb-32 relative z-10">
+      <div class="relative rounded-[36px] px-8 py-14 overflow-visible"
+           style="background: #0d121f; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+
+        <!-- Wizard Mascot badge decoration -->
+        <div class="absolute -top-16 -left-10 z-20 pointer-events-none hidden md:block">
+          <div class="relative w-32 h-32">
+            <div class="w-full h-full rounded-full"
+                 style="background: #1e1b4b; border: 3px solid #3b82f6; box-shadow: 0 6px 18px rgba(0,0,0,0.5);"></div>
+            <img :src="WizardMascot" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] w-[180px] max-w-none h-auto object-contain"
+                 style="filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));" />
+          </div>
+        </div>
+
+        <!-- Section Title -->
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-black text-white tracking-tight mb-3">
+            Pertanyaan <span class="text-blue-500 italic">Sering Diajukan</span> (FAQ)
+          </h2>
+          <p class="text-gray-500 text-[14px] font-semibold max-w-md mx-auto">
+            Temukan jawaban untuk pertanyaan umum mengenai platform KomuniTip.
+          </p>
+        </div>
+
+        <!-- FAQ Items (Accordion) -->
+        <div class="space-y-4 max-w-2xl mx-auto">
+          <div v-for="(faq, index) in faqs" :key="index"
+               class="rounded-2xl border transition-all duration-300 overflow-hidden"
+               :style="{
+                 backgroundColor: '#111827',
+                 borderColor: faq.open ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.05)',
+                 boxShadow: faq.open ? '0 0 20px rgba(59,130,246,0.1)' : 'none'
+               }">
+            <button @click="toggleFaq(index)"
+                    class="w-full flex items-center justify-between px-6 py-5 text-left font-bold text-[15px] text-white hover:text-blue-400 transition-colors focus:outline-none cursor-pointer">
+              <span>{{ faq.question }}</span>
+              <svg class="w-5 h-5 text-gray-500 transition-transform duration-300 shrink-0 ml-4"
+                   :class="{ 'rotate-180 text-blue-500': faq.open }"
+                   fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div class="transition-all duration-300 overflow-hidden"
+                 :style="{ maxHeight: faq.open ? '200px' : '0px' }">
+              <p class="px-6 pb-5 text-[14px] text-gray-400 font-semibold leading-relaxed">
+                {{ faq.answer }}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
