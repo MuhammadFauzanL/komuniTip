@@ -1,0 +1,182 @@
+name: CI
+
+# Continuous Integration: lint, test, dan build untuk setiap service.
+# Berjalan di setiap Pull Request dan push ke branch utama.
+
+on:
+  push:
+    branches: [main, HaqiDev]
+  pull_request:
+    branches: [main, HaqiDev]
+
+# Batalkan run lama bila ada commit baru di ref yang sama (hemat menit CI).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ───────────────────────────────────────────────
+  # Deteksi service mana yang berubah → skip job yang tidak relevan.
+  # ───────────────────────────────────────────────
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      risk-engine: ${{ steps.filter.outputs.risk-engine }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'Frontend/**'
+              - '.github/workflows/ci.yml'
+            risk-engine:
+              - 'risk-engine/**'
+              - 'main.py'
+              - 'anti_obfuscation_detector.py'
+              - 'test_api.py'
+              - 'requirements.txt'
+              - '.github/workflows/ci.yml'
+
+  # ───────────────────────────────────────────────
+  # BACKEND (NestJS) — lint, unit test, build
+  # ───────────────────────────────────────────────
+  backend:
+    name: Backend (NestJS)
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    # DB sementara untuk unit/integration test Prisma.
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: komunitip_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d komunitip_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/komunitip_test?schema=public
+      JWT_SECRET: test-secret-ci-only
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+
+      - name: Lint
+        # Mode read-only (tanpa --fix) supaya CI hanya melaporkan, tidak mengubah file.
+        # Non-blocking sementara: kode existing belum rapi, dibersihkan bertahap.
+        # Gate utama ada di test + build di bawah.
+        continue-on-error: true
+        run: npx eslint "{src,apps,libs,test}/**/*.ts" --max-warnings=0
+
+      - name: Unit tests
+        run: npm test -- --ci --runInBand
+
+      - name: Build
+        run: npm run build
+
+  # ───────────────────────────────────────────────
+  # FRONTEND (Vite) — build
+  # ───────────────────────────────────────────────
+  frontend:
+    name: Frontend (Vite)
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+  # ───────────────────────────────────────────────
+  # RISK ENGINE (FastAPI / Python) — lint + compile check
+  # ───────────────────────────────────────────────
+  risk-engine:
+    name: Risk Engine (Python)
+    needs: changes
+    if: needs.changes.outputs.risk-engine == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Ruff (linter)
+        run: pip install ruff
+
+      - name: Lint (ruff)
+        # Non-blocking sementara: kode existing dibersihkan bertahap.
+        continue-on-error: true
+        run: ruff check . --exclude venv,__pycache__
+
+      - name: Syntax/compile check
+        run: python -m compileall -q main.py anti_obfuscation_detector.py risk-engine
+
+  # ───────────────────────────────────────────────
+  # Gate akhir: semua job wajib lulus (dipakai branch protection)
+  # ───────────────────────────────────────────────
+  ci-success:
+    name: CI Success
+    if: always()
+    needs: [backend, frontend, risk-engine]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify no job failed
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
+            echo "Salah satu job CI gagal."
+            exit 1
+          fi
+          echo "Semua job CI lulus (atau di-skip karena tidak ada perubahan)."
