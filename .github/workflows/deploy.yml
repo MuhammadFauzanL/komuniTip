@@ -1,0 +1,81 @@
+name: Deploy to VPS
+
+# Continuous Deployment ke VPS production.
+# Berjalan HANYA setelah workflow "CI" sukses di branch main,
+# atau dijalankan manual lewat tombol "Run workflow".
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false # jangan batalkan deploy yang sedang berjalan
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy (SSH + docker compose)
+    runs-on: ubuntu-latest
+
+    # Hanya lanjut jika CI sukses (atau dijalankan manual).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    # Environment "production" → bisa pasang required reviewers / protection rules
+    # di Settings → Environments untuk approval manual sebelum deploy.
+    environment:
+      name: production
+      url: https://www.komunitip.online
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          # Hentikan jika ada perintah yang gagal.
+          script_stop: true
+          script: |
+            set -euo pipefail
+            echo "▶ Masuk ke direktori project"
+            cd ~/komuniTip
+
+            echo "▶ Tarik kode terbaru dari main"
+            git fetch --all --prune
+            git reset --hard origin/main
+
+            echo "▶ Build & jalankan ulang container"
+            docker compose up -d --build --remove-orphans
+
+            echo "▶ Tunggu backend healthy"
+            timeout 120 bash -c 'until [ "$(docker inspect -f {{.State.Health.Status}} komunitip-backend 2>/dev/null)" = "healthy" ]; do sleep 3; done' \
+              || echo "⚠ Backend belum healthy dalam 120s, lanjut migrasi tetap dijalankan"
+
+            echo "▶ Jalankan migrasi database (production-safe)"
+            docker exec komunitip-backend npx prisma migrate deploy
+
+            echo "▶ Bersihkan image lama yang tidak terpakai"
+            docker image prune -f
+
+            echo "✅ Deploy selesai"
+
+      - name: Smoke test (cek API hidup)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            set -e
+            echo "▶ Smoke test endpoint backend"
+            curl -fsS http://localhost:3000/api >/dev/null && echo "✅ Backend merespons" || (echo "❌ Backend tidak merespons" && exit 1)
